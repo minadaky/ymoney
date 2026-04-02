@@ -90,21 +90,14 @@ struct TransactionsView: View {
                         Text("Cash")
                             .foregroundStyle(.orange)
                     }
+                    if trn.isTransfer, let linkedAcct = trn.linkedAccount {
+                        Text("·")
+                        Text(linkedAcct.name ?? "Account")
+                            .foregroundStyle(.blue)
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
-
-                // Deep link to linked account
-                if trn.isTransfer, let linkedAcct = trn.linkedAccount {
-                    NavigationLink {
-                        AccountDetailView(account: linkedAcct)
-                    } label: {
-                        Label(linkedAcct.name ?? "Account", systemImage: "arrow.right.circle.fill")
-                            .font(.caption)
-                            .foregroundStyle(.blue)
-                    }
-                    .buttonStyle(.plain)
-                }
             }
 
             Spacer()
