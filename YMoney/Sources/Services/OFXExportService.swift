@@ -260,9 +260,12 @@ final class OFXExportService {
     private func ofxAccountType(_ type: Int32) -> String {
         switch type {
         case 0: return "CHECKING"
-        case 1: return "SAVINGS"
-        case 2: return "CREDITLINE"
-        case 3: return "CHECKING"
+        case 1: return "CREDITLINE"
+        case 2: return "SAVINGS"
+        case 3: return "CHECKING"     // Cash → Checking
+        case 4: return "MONEYMRKT"
+        case 8: return "CD"
+        case 9: return "CREDITLINE"   // Loan
         default: return "CHECKING"
         }
     }

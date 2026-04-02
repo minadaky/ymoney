@@ -144,11 +144,17 @@ struct DashboardView: View {
     private func accountIcon(for type: Int32) -> String {
         switch type {
         case 0: return "building.columns"
-        case 1: return "banknote"
-        case 2: return "creditcard"
+        case 1: return "creditcard"
+        case 2: return "banknote"
         case 3: return "dollarsign.circle"
-        case 4: return "percent"
+        case 4: return "building"
         case 5: return "chart.line.uptrend.xyaxis"
+        case 6: return "house"
+        case 7: return "minus.circle"
+        case 8: return "lock"
+        case 9: return "percent"
+        case 10: return "briefcase"
+        case 11: return "heart"
         default: return "questionmark.circle"
         }
     }
@@ -156,11 +162,17 @@ struct DashboardView: View {
     private func accountColor(for type: Int32) -> Color {
         switch type {
         case 0: return .blue
-        case 1: return .teal
-        case 2: return .orange
+        case 1: return .orange
+        case 2: return .teal
         case 3: return .green
-        case 4: return .red
+        case 4: return .cyan
         case 5: return .purple
+        case 6: return .brown
+        case 7: return .pink
+        case 8: return .indigo
+        case 9: return .red
+        case 10: return .mint
+        case 11: return .mint
         default: return .gray
         }
     }
