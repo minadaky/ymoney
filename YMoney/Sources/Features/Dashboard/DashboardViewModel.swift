@@ -9,7 +9,8 @@ final class DashboardViewModel {
     var bankingBalance: NSDecimalNumber = .zero
     var investmentBalance: NSDecimalNumber = .zero
     var recentTransactions: [Transaction] = []
-    var accountSummaries: [(name: String, balance: NSDecimalNumber, type: Int32)] = []
+    var accounts: [Account] = []
+    var accountBalances: [NSManagedObjectID: NSDecimalNumber] = [:]
 
     private let context: NSManagedObjectContext
 
@@ -32,14 +33,13 @@ final class DashboardViewModel {
         var total = NSDecimalNumber.zero
         var banking = NSDecimalNumber.zero
         var investment = NSDecimalNumber.zero
-        var summaries: [(String, NSDecimalNumber, Int32)] = []
+        var balances: [NSManagedObjectID: NSDecimalNumber] = [:]
 
         for account in accounts {
             let balance = computeBalance(for: account)
-            summaries.append((account.name ?? "Unknown", balance, account.accountType))
+            balances[account.objectID] = balance
             total = total.adding(balance)
 
-            // Money account types: 0=Checking, 1=Savings, 2=Credit, 3=Cash, 4=Loan, 5=Investment
             if account.accountType == 5 {
                 investment = investment.adding(balance)
             } else {
@@ -47,10 +47,11 @@ final class DashboardViewModel {
             }
         }
 
+        self.accounts = accounts
+        self.accountBalances = balances
         totalBalance = total
         bankingBalance = banking
         investmentBalance = investment
-        accountSummaries = summaries
     }
 
     private func computeBalance(for account: Account) -> NSDecimalNumber {

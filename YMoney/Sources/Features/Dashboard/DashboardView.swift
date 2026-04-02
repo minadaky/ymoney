@@ -8,7 +8,7 @@ struct DashboardView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 if let vm = viewModel {
                     netWorthCard(vm)
                     balanceSummary(vm)
@@ -20,7 +20,7 @@ struct DashboardView: View {
             }
             .padding()
         }
-        .navigationTitle("Dashboard")
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             let vm = DashboardViewModel(context: viewContext)
             vm.load()
@@ -29,29 +29,27 @@ struct DashboardView: View {
     }
 
     private func netWorthCard(_ vm: DashboardViewModel) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 4) {
             Text("Net Worth")
-                .font(.subheadline)
+                .font(.caption)
                 .foregroundStyle(.secondary)
             Text(CurrencyFormatter.format(vm.totalBalance))
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .font(.system(size: 34, weight: .bold, design: .rounded))
                 .foregroundColor(CurrencyFormatter.isPositive(vm.totalBalance) ? Color.primary : Color.red)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
-        .background(.ultraThinMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.vertical, 16)
     }
 
     private func balanceSummary(_ vm: DashboardViewModel) -> some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             summaryTile(title: "Banking", amount: vm.bankingBalance, icon: "building.columns.fill", color: .blue)
             summaryTile(title: "Investments", amount: vm.investmentBalance, icon: "chart.line.uptrend.xyaxis", color: .green)
         }
     }
 
     private func summaryTile(title: String, amount: NSDecimalNumber, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Image(systemName: icon)
                     .foregroundStyle(color)
@@ -69,23 +67,33 @@ struct DashboardView: View {
     }
 
     private func accountsList(_ vm: DashboardViewModel) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Accounts")
                 .font(.headline)
+                .padding(.bottom, 2)
 
-            ForEach(Array(vm.accountSummaries.enumerated()), id: \.offset) { _, summary in
-                HStack {
-                    Image(systemName: accountIcon(for: summary.type))
-                        .foregroundStyle(accountColor(for: summary.type))
-                        .frame(width: 24)
-                    Text(summary.name)
-                        .font(.subheadline)
-                    Spacer()
-                    Text(CurrencyFormatter.format(summary.balance))
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundColor(CurrencyFormatter.isPositive(summary.balance) ? Color.primary : Color.red)
+            ForEach(vm.accounts, id: \.objectID) { account in
+                let balance = vm.accountBalances[account.objectID] ?? .zero
+                NavigationLink {
+                    AccountDetailView(account: account)
+                } label: {
+                    HStack {
+                        Image(systemName: accountIcon(for: account.accountType))
+                            .foregroundStyle(accountColor(for: account.accountType))
+                            .frame(width: 24)
+                        Text(account.name ?? "Unknown")
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Text(CurrencyFormatter.format(balance))
+                            .font(.subheadline.monospacedDigit())
+                            .foregroundColor(CurrencyFormatter.isPositive(balance) ? Color.primary : Color.red)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.vertical, 4)
                 }
-                .padding(.vertical, 4)
             }
         }
         .padding()
@@ -94,25 +102,40 @@ struct DashboardView: View {
     }
 
     private func recentTransactionsCard(_ vm: DashboardViewModel) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Recent Transactions")
                 .font(.headline)
+                .padding(.bottom, 2)
 
             ForEach(vm.recentTransactions, id: \.objectID) { trn in
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(trn.payee?.name ?? trn.category?.fullName ?? "Transaction")
-                            .font(.subheadline)
-                        Text(trn.date?.shortDisplay ?? "")
+                NavigationLink {
+                    TransactionDetailView(transaction: trn)
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(trn.payee?.name ?? trn.category?.fullName ?? "Transaction")
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            HStack(spacing: 4) {
+                                Text(trn.date?.shortDisplay ?? "")
+                                if let acctName = trn.account?.name {
+                                    Text("·")
+                                    Text(acctName)
+                                }
+                            }
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Text(CurrencyFormatter.format(trn.amount))
+                            .font(.subheadline.monospacedDigit())
+                            .foregroundStyle(CurrencyFormatter.isPositive(trn.amount) ? .green : .red)
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
-                    Spacer()
-                    Text(CurrencyFormatter.format(trn.amount))
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(CurrencyFormatter.isPositive(trn.amount) ? .green : .red)
+                    .padding(.vertical, 2)
                 }
-                .padding(.vertical, 2)
 
                 if trn != vm.recentTransactions.last {
                     Divider()
@@ -126,12 +149,12 @@ struct DashboardView: View {
 
     private func accountIcon(for type: Int32) -> String {
         switch type {
-        case 0: return "building.columns"       // Checking
-        case 1: return "banknote"               // Savings
-        case 2: return "creditcard"             // Credit
-        case 3: return "dollarsign.circle"      // Cash
-        case 4: return "percent"                // Loan
-        case 5: return "chart.line.uptrend.xyaxis" // Investment
+        case 0: return "building.columns"
+        case 1: return "banknote"
+        case 2: return "creditcard"
+        case 3: return "dollarsign.circle"
+        case 4: return "percent"
+        case 5: return "chart.line.uptrend.xyaxis"
         default: return "questionmark.circle"
         }
     }
