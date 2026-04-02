@@ -83,17 +83,14 @@ struct DashboardView: View {
                             .frame(width: 24)
                         Text(account.name ?? "Unknown")
                             .font(.subheadline)
-                            .foregroundStyle(.primary)
                         Spacer()
                         Text(CurrencyFormatter.format(balance))
                             .font(.subheadline.monospacedDigit())
                             .foregroundColor(CurrencyFormatter.isPositive(balance) ? Color.primary : Color.red)
-                        Image(systemName: "chevron.right")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
                     }
                     .padding(.vertical, 4)
                 }
+                .foregroundStyle(.primary)
             }
         }
         .padding()
@@ -115,7 +112,6 @@ struct DashboardView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(trn.payee?.name ?? trn.category?.fullName ?? "Transaction")
                                 .font(.subheadline)
-                                .foregroundStyle(.primary)
                             HStack(spacing: 4) {
                                 Text(trn.date?.shortDisplay ?? "")
                                 if let acctName = trn.account?.name {
@@ -129,13 +125,11 @@ struct DashboardView: View {
                         Spacer()
                         Text(CurrencyFormatter.format(trn.amount))
                             .font(.subheadline.monospacedDigit())
-                            .foregroundStyle(CurrencyFormatter.isPositive(trn.amount) ? .green : .red)
-                        Image(systemName: "chevron.right")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundColor(CurrencyFormatter.isPositive(trn.amount) ? Color.primary : Color.red)
                     }
                     .padding(.vertical, 2)
                 }
+                .foregroundStyle(.primary)
 
                 if trn != vm.recentTransactions.last {
                     Divider()
