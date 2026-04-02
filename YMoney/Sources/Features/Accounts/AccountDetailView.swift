@@ -160,10 +160,12 @@ struct AccountDetailView: View {
             } else if trn.isCashLeg {
                 Image(systemName: "dollarsign.circle")
                     .foregroundStyle(.orange)
+            } else if (trn.amount?.doubleValue ?? 0) >= 0 {
+                Image(systemName: "arrow.down.circle.fill")
+                    .foregroundStyle(.green)
             } else {
-                Image(systemName: "circle.fill")
-                    .font(.caption2)
-                    .foregroundStyle(.gray.opacity(0.3))
+                Image(systemName: "arrow.up.circle.fill")
+                    .foregroundStyle(.red)
             }
         }
     }
