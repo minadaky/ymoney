@@ -1,0 +1,1 @@
+/Users/yanni/code/ymoney/CLAUDE.md
