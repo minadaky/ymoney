@@ -35,4 +35,24 @@ final class PersistenceController: @unchecked Sendable {
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         return context
     }
+
+    /// Delete all data from every entity in the store
+    func deleteAllData() throws {
+        let context = container.viewContext
+        let entityNames = container.managedObjectModel.entities.compactMap(\.name)
+
+        for entityName in entityNames {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            deleteRequest.resultType = .resultTypeObjectIDs
+
+            let result = try context.execute(deleteRequest) as? NSBatchDeleteResult
+            if let objectIDs = result?.result as? [NSManagedObjectID] {
+                let changes = [NSDeletedObjectsKey: objectIDs]
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+            }
+        }
+
+        UserDefaults.standard.set(false, forKey: "hasImportedData")
+    }
 }

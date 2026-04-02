@@ -29,7 +29,11 @@ actor MoneyImportService {
         guard let url = Bundle.main.url(forResource: "codekind_export", withExtension: "json") else {
             throw ImportError.fileNotFound
         }
+        try await importJSON(from: url)
+    }
 
+    /// Import a Money JSON export from any file URL
+    func importJSON(from url: URL) async throws {
         let data = try Data(contentsOf: url)
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             throw ImportError.invalidFormat

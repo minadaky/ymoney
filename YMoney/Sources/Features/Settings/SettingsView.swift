@@ -1,12 +1,19 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
-/// App settings
+/// App settings — data management, import, and about
 struct SettingsView: View {
+    @Environment(\.managedObjectContext) private var viewContext
     @State private var hasImported = UserDefaults.standard.bool(forKey: "hasImportedData")
     @State private var quotesEnabled = QuoteConfiguration.quotesEnabled
     @State private var quoteTestStatus: QuoteTest = .idle
     @State private var overrideURL = QuoteConfiguration.jsOverrideURL ?? ""
     @State private var overrideStatus: OverrideStatus = .idle
+    @State private var showDeleteConfirmation = false
+    @State private var showFilePicker = false
+    @State private var isImporting = false
+    @State private var statusMessage: String?
+    @State private var statusIsError = false
 
     private enum QuoteTest: Equatable {
         case idle, checking, valid(String), invalid(String)
@@ -136,43 +143,132 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Button(role: .destructive) {
-                    UserDefaults.standard.set(false, forKey: "hasImportedData")
-                    hasImported = false
+                Button {
+                    showFilePicker = true
                 } label: {
-                    Label("Reset Data", systemImage: "trash")
+                    Label("Import Money File (.json)", systemImage: "square.and.arrow.down")
+                }
+                .disabled(isImporting)
+
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    Label("Delete All Data", systemImage: "trash")
+                }
+                .disabled(isImporting)
+            }
+
+            if isImporting {
+                Section {
+                    HStack {
+                        ProgressView()
+                            .padding(.trailing, 8)
+                        Text("Importing…")
+                    }
+                }
+            }
+
+            if let message = statusMessage {
+                Section {
+                    Label(message, systemImage: statusIsError ? "xmark.circle" : "checkmark.circle")
+                        .foregroundStyle(statusIsError ? .red : .green)
                 }
             }
 
             Section("About") {
-                HStack {
-                    Label("Version", systemImage: "info.circle")
-                    Spacer()
-                    Text("1.0")
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack {
-                    Label("Database Format", systemImage: "doc.fill")
-                    Spacer()
-                    Text("MS Money (.mny)")
-                        .foregroundStyle(.secondary)
-                }
-
-                HStack {
-                    Label("Compatibility", systemImage: "checkmark.shield")
-                    Spacer()
-                    Text("Money Sunset Edition")
-                        .foregroundStyle(.secondary)
-                }
+                infoRow("Version", value: "1.0", icon: "info.circle")
+                infoRow("Database Format", value: "MS Money (.mny)", icon: "doc.fill")
+                infoRow("Compatibility", value: "Money Sunset Edition", icon: "checkmark.shield")
             }
 
             Section("Format Support") {
-                Label("Read: .mny (Jet 4.0 / MSISAM)", systemImage: "arrow.down.doc")
+                Label("Read: .mny → JSON export", systemImage: "arrow.down.doc")
                 Label("Export: OFX 2.0", systemImage: "arrow.up.doc")
             }
         }
         .navigationTitle("Settings")
+        .confirmationDialog("Delete all financial data?", isPresented: $showDeleteConfirmation, titleVisibility: .visible) {
+            Button("Delete Everything", role: .destructive) {
+                deleteAllData()
+            }
+        } message: {
+            Text("This will permanently remove all accounts, transactions, categories, payees, investments, and budgets. You'll need to re-import a Money file to use the app.")
+        }
+        .fileImporter(
+            isPresented: $showFilePicker,
+            allowedContentTypes: [UTType.json],
+            allowsMultipleSelection: false
+        ) { result in
+            handleFileImport(result)
+        }
+    }
+
+    private func infoRow(_ label: String, value: String, icon: String) -> some View {
+        HStack {
+            Label(label, systemImage: icon)
+            Spacer()
+            Text(value)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func deleteAllData() {
+        statusMessage = nil
+        do {
+            try PersistenceController.shared.deleteAllData()
+            hasImported = false
+            statusMessage = "All data deleted"
+            statusIsError = false
+        } catch {
+            statusMessage = "Delete failed: \(error.localizedDescription)"
+            statusIsError = true
+        }
+    }
+
+    private func handleFileImport(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+
+            // Must access security-scoped resource
+            guard url.startAccessingSecurityScopedResource() else {
+                statusMessage = "Cannot access file"
+                statusIsError = true
+                return
+            }
+
+            isImporting = true
+            statusMessage = nil
+
+            Task {
+                defer { url.stopAccessingSecurityScopedResource() }
+                do {
+                    // Delete existing data first
+                    try PersistenceController.shared.deleteAllData()
+
+                    let service = MoneyImportService(context: viewContext)
+                    try await service.importJSON(from: url)
+                    UserDefaults.standard.set(true, forKey: "hasImportedData")
+
+                    await MainActor.run {
+                        hasImported = true
+                        isImporting = false
+                        statusMessage = "Import complete"
+                        statusIsError = false
+                    }
+                } catch {
+                    await MainActor.run {
+                        isImporting = false
+                        statusMessage = "Import failed: \(error.localizedDescription)"
+                        statusIsError = true
+                    }
+                }
+            }
+
+        case .failure(let error):
+            statusMessage = "File picker error: \(error.localizedDescription)"
+            statusIsError = true
+        }
     }
 
     private func testQuote() async {
