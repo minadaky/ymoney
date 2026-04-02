@@ -32,11 +32,17 @@ enum CurrencyFormatter {
     static func formatCompact(_ amount: NSDecimalNumber?) -> String {
         guard let amount = amount else { return "$0" }
         let doubleVal = amount.doubleValue
-        if abs(doubleVal) >= 1_000_000 {
-            return String(format: "$%.1fM", doubleVal / 1_000_000)
-        } else if abs(doubleVal) >= 1_000 {
-            return String(format: "$%.0fK", doubleVal / 1_000)
+        let abs = Swift.abs(doubleVal)
+        let sign = doubleVal < 0 ? "-" : ""
+
+        if abs >= 1_000_000_000 {
+            return String(format: "%@$%.1fB", sign, abs / 1_000_000_000)
+        } else if abs >= 10_000_000 {
+            return String(format: "%@$%.0fM", sign, abs / 1_000_000)
+        } else if abs >= 1_000_000 {
+            return String(format: "%@$%.1fM", sign, abs / 1_000_000)
         }
+        // Under 1M: show full number, no cents
         return compactFormatter.string(from: amount) ?? "$0"
     }
 

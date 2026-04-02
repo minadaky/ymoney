@@ -50,19 +50,18 @@ struct DashboardView: View {
     }
 
     private func summaryTile(title: String, amount: NSDecimalNumber, icon: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Image(systemName: icon)
-                    .foregroundStyle(color)
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Text(CurrencyFormatter.format(amount))
-                .font(.title3.bold())
+        VStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(color)
+            Text(CurrencyFormatter.formatCompact(amount))
+                .font(.subheadline.bold().monospacedDigit())
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 8)
         .background(color.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
