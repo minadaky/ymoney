@@ -7,7 +7,7 @@ import CoreData
 final class DashboardViewModel {
     var totalBalance: NSDecimalNumber = .zero
     var bankingBalance: NSDecimalNumber = .zero
-    var creditBalance: NSDecimalNumber = .zero
+    var debtBalance: NSDecimalNumber = .zero
     var investmentBalance: NSDecimalNumber = .zero
     var recentTransactions: [Transaction] = []
     var accounts: [Account] = []
@@ -33,19 +33,26 @@ final class DashboardViewModel {
 
         var total = NSDecimalNumber.zero
         var banking = NSDecimalNumber.zero
-        var credit = NSDecimalNumber.zero
+        var debt = NSDecimalNumber.zero
         var investment = NSDecimalNumber.zero
         var balances: [NSManagedObjectID: NSDecimalNumber] = [:]
+
+        // Debt account types: Credit Card (1), Liability (7), Loan (9)
+        let debtTypes: Set<Int32> = [1, 7, 9]
+        // Investment types
+        let investTypes: Set<Int32> = [5, 10, 11]
 
         for account in accounts {
             let balance = computeBalance(for: account)
             balances[account.objectID] = balance
             total = total.adding(balance)
 
-            switch account.accountType {
-            case 1:  credit = credit.adding(balance)       // Credit Card
-            case 5:  investment = investment.adding(balance) // Investment
-            default: banking = banking.adding(balance)      // Everything else
+            if debtTypes.contains(account.accountType) {
+                debt = debt.adding(balance)
+            } else if investTypes.contains(account.accountType) {
+                investment = investment.adding(balance)
+            } else {
+                banking = banking.adding(balance)
             }
         }
 
@@ -53,7 +60,7 @@ final class DashboardViewModel {
         self.accountBalances = balances
         totalBalance = total
         bankingBalance = banking
-        creditBalance = credit
+        debtBalance = debt
         investmentBalance = investment
     }
 

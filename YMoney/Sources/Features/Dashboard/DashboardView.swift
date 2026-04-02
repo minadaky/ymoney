@@ -45,6 +45,7 @@ struct DashboardView: View {
         HStack(spacing: 12) {
             summaryTile(title: "Banking", amount: vm.bankingBalance, icon: "building.columns.fill", color: .blue)
             summaryTile(title: "Investments", amount: vm.investmentBalance, icon: "chart.line.uptrend.xyaxis", color: .green)
+            summaryTile(title: "Debt", amount: vm.debtBalance, icon: "creditcard.fill", color: .red)
         }
     }
 
