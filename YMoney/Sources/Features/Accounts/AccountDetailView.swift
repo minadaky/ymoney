@@ -18,6 +18,8 @@ struct AccountDetailView: View {
     @State private var searchText = ""
     @State private var filter: TransactionFilter = .all
 
+    @State private var showAddTransaction = false
+
     /// Whether this is an investment account with a merged cash companion
     private var isInvestmentAccount: Bool {
         account.accountType == 5 && account.cashCompanionMoneyID > 0
@@ -63,7 +65,22 @@ struct AccountDetailView: View {
             .searchable(text: $searchText, prompt: "Search transactions")
         }
         .navigationTitle(account.name ?? "Account")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showAddTransaction = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showAddTransaction) {
+            TransactionEditorView(transaction: nil, preselectedAccount: account)
+        }
         .onAppear { loadTransactions() }
+        .onChange(of: showAddTransaction) { _, isPresented in
+            if !isPresented { loadTransactions() }
+        }
     }
 
     private var filteredTransactions: [Transaction] {

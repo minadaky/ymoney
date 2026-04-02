@@ -4,6 +4,8 @@ import CoreData
 /// Detail view for a single transaction
 struct TransactionDetailView: View {
     let transaction: Transaction
+    @State private var showEditor = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         List {
@@ -102,6 +104,18 @@ struct TransactionDetailView: View {
         }
         .navigationTitle("Transaction")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showEditor = true
+                } label: {
+                    Text("Edit")
+                }
+            }
+        }
+        .sheet(isPresented: $showEditor) {
+            TransactionEditorView(transaction: transaction, preselectedAccount: nil)
+        }
     }
 
     private var statusBadge: some View {

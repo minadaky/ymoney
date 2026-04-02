@@ -118,10 +118,12 @@
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="isCashLeg" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isInternalTransfer" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isManual" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isTransfer" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="linkedTransactionID" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="memo" optional="YES" attributeType="String"/>
         <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="transactionFlags" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="transactions" inverseEntity="Account"/>
         <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="transactions" inverseEntity="Category"/>
