@@ -284,22 +284,20 @@ actor MoneyImportService {
             let fromOrigAcct = originalAccountIDs[fromID] ?? 0
             let linkOrigAcct = originalAccountIDs[linkID] ?? 0
 
-            // Determine if this is an internal transfer (between an investment
-            // account and its cash companion — same merged account)
-            let fromIsCash = cashCompanionIDs.contains(fromOrigAcct)
-            let linkIsCash = cashCompanionIDs.contains(linkOrigAcct)
             let fromParent = cashToInvestmentMap[fromOrigAcct] ?? fromOrigAcct
             let linkParent = cashToInvestmentMap[linkOrigAcct] ?? linkOrigAcct
 
             let isInternal = fromParent == linkParent
 
+            // Both sides share a transferGroupID
+            let groupID = UUID().uuidString
+
             fromTrn.isTransfer = true
-            fromTrn.linkedTransactionID = linkID
+            fromTrn.transferGroupID = groupID
             linkTrn.isTransfer = true
-            linkTrn.linkedTransactionID = fromID
+            linkTrn.transferGroupID = groupID
 
             if isInternal {
-                // Both sides are within the same merged account
                 fromTrn.isInternalTransfer = true
                 linkTrn.isInternalTransfer = true
             }
@@ -309,14 +307,19 @@ actor MoneyImportService {
     /// After transfers are imported, resolve linkedAccount references
     /// so the UI can deep-link to the other account in a transfer.
     private func resolveTransferLinks() {
+        // Group transfer transactions by transferGroupID
+        var groups: [String: [Transaction]] = [:]
         for (_, trn) in transactionsByMoneyID {
-            guard trn.isTransfer, trn.linkedTransactionID > 0 else { continue }
-            if let linkedTrn = transactionsByMoneyID[trn.linkedTransactionID] {
-                // The linked account is the account of the OTHER transaction
-                // But since cash companions are merged, use the merged account
-                if linkedTrn.account != trn.account {
-                    trn.linkedAccount = linkedTrn.account
-                }
+            guard trn.isTransfer, let gid = trn.transferGroupID else { continue }
+            groups[gid, default: []].append(trn)
+        }
+
+        for (_, pair) in groups {
+            guard pair.count == 2 else { continue }
+            let a = pair[0], b = pair[1]
+            if a.account != b.account {
+                a.linkedAccount = b.account
+                b.linkedAccount = a.account
             }
         }
     }

@@ -8,32 +8,35 @@ enum TransactionSourceType: Int16 {
     case ofxImport = 2
 }
 
+/// The kind of transaction the user is entering
+enum TransactionKind: String, CaseIterable {
+    case expense = "Expense"
+    case income = "Income"
+    case transfer = "Transfer"
+}
+
 /// Full-screen form for creating or editing a transaction
 struct TransactionEditorView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
 
-    /// nil = creating new, non-nil = editing existing
     let transaction: Transaction?
-    /// Pre-selected account (from account detail "+" button)
     let preselectedAccount: Account?
 
     @State private var date = Date()
     @State private var amountText = ""
-    @State private var isExpense = true
+    @State private var kind: TransactionKind = .expense
     @State private var selectedAccount: Account?
+    @State private var transferToAccount: Account?
     @State private var selectedCategory: Category?
-    @State private var selectedPayee: Payee?
     @State private var payeeName = ""
     @State private var memo = ""
     @State private var checkNumber = ""
     @State private var clearedStatus: Int32 = 0
 
     @State private var accounts: [Account] = []
-    @State private var categories: [Category] = []
     @State private var payees: [Payee] = []
     @State private var showCategoryPicker = false
-    @State private var showPayeePicker = false
     @State private var errorMessage: String?
 
     private var isEditing: Bool { transaction != nil }
@@ -41,60 +44,65 @@ struct TransactionEditorView: View {
     var body: some View {
         NavigationStack {
             Form {
-                // Amount section
                 Section {
-                    HStack {
-                        Picker("Type", selection: $isExpense) {
-                            Text("Expense").tag(true)
-                            Text("Income").tag(false)
+                    Picker("Type", selection: $kind) {
+                        ForEach(TransactionKind.allCases, id: \.self) { k in
+                            Text(k.rawValue).tag(k)
                         }
-                        .pickerStyle(.segmented)
                     }
+                    .pickerStyle(.segmented)
 
                     HStack {
-                        Text(isExpense ? "-$" : "+$")
+                        Text(amountPrefix)
                             .font(.title2.bold())
-                            .foregroundStyle(isExpense ? .red : .green)
+                            .foregroundStyle(amountColor)
                         TextField("0.00", text: $amountText)
                             .keyboardType(.decimalPad)
                             .font(.title2.bold().monospacedDigit())
                     }
                 }
 
-                // Details section
-                Section("Details") {
+                Section(kind == .transfer ? "Accounts" : "Details") {
                     DatePicker("Date", selection: $date, displayedComponents: .date)
 
-                    Picker("Account", selection: $selectedAccount) {
+                    Picker(kind == .transfer ? "From" : "Account", selection: $selectedAccount) {
                         Text("Select Account").tag(nil as Account?)
                         ForEach(accounts, id: \.objectID) { acct in
                             Text(acct.name ?? "Unknown").tag(acct as Account?)
                         }
                     }
 
-                    // Payee — type-ahead with existing payees
-                    HStack {
-                        Label("Payee", systemImage: "person.fill")
-                        Spacer()
-                        TextField("Payee name", text: $payeeName)
-                            .multilineTextAlignment(.trailing)
-                    }
-
-                    // Category picker
-                    Button {
-                        showCategoryPicker = true
-                    } label: {
-                        HStack {
-                            Label("Category", systemImage: "tag.fill")
-                            Spacer()
-                            Text(selectedCategory?.fullName ?? "None")
-                                .foregroundStyle(.secondary)
+                    if kind == .transfer {
+                        Picker("To", selection: $transferToAccount) {
+                            Text("Select Account").tag(nil as Account?)
+                            ForEach(accounts.filter { $0 != selectedAccount }, id: \.objectID) { acct in
+                                Text(acct.name ?? "Unknown").tag(acct as Account?)
+                            }
                         }
                     }
-                    .foregroundStyle(.primary)
+
+                    if kind != .transfer {
+                        HStack {
+                            Label("Payee", systemImage: "person.fill")
+                            Spacer()
+                            TextField("Payee name", text: $payeeName)
+                                .multilineTextAlignment(.trailing)
+                        }
+
+                        Button {
+                            showCategoryPicker = true
+                        } label: {
+                            HStack {
+                                Label("Category", systemImage: "tag.fill")
+                                Spacer()
+                                Text(selectedCategory?.fullName ?? "None")
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .foregroundStyle(.primary)
+                    }
                 }
 
-                // Optional section
                 Section("Optional") {
                     HStack {
                         Label("Check #", systemImage: "number")
@@ -120,12 +128,10 @@ struct TransactionEditorView: View {
 
                 if let error = errorMessage {
                     Section {
-                        Text(error)
-                            .foregroundStyle(.red)
+                        Text(error).foregroundStyle(.red)
                     }
                 }
 
-                // Delete button for editing
                 if isEditing {
                     Section {
                         Button(role: .destructive) {
@@ -165,6 +171,22 @@ struct TransactionEditorView: View {
         }
     }
 
+    private var amountPrefix: String {
+        switch kind {
+        case .expense: return "-$"
+        case .income: return "+$"
+        case .transfer: return "$"
+        }
+    }
+
+    private var amountColor: Color {
+        switch kind {
+        case .expense: return .red
+        case .income: return .green
+        case .transfer: return .blue
+        }
+    }
+
     // MARK: - Data Loading
 
     private func loadData() {
@@ -173,28 +195,33 @@ struct TransactionEditorView: View {
         acctReq.predicate = NSPredicate(format: "isClosed == NO")
         accounts = (try? viewContext.fetch(acctReq)) ?? []
 
-        let catReq = Category.fetchRequest()
-        catReq.sortDescriptors = [NSSortDescriptor(key: "fullName", ascending: true)]
-        categories = (try? viewContext.fetch(catReq)) ?? []
-
         let payReq = Payee.fetchRequest()
         payReq.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         payees = (try? viewContext.fetch(payReq)) ?? []
 
-        // Pre-fill from preselected account
         if let acct = preselectedAccount {
             selectedAccount = acct
         }
 
-        // Pre-fill from existing transaction when editing
         if let trn = transaction {
             date = trn.date ?? Date()
             let amt = trn.amount?.doubleValue ?? 0
-            isExpense = amt < 0
-            amountText = String(format: "%.2f", abs(amt))
-            selectedAccount = trn.account
+            if trn.isTransfer {
+                kind = .transfer
+                amountText = String(format: "%.2f", abs(amt))
+                if amt < 0 {
+                    selectedAccount = trn.account
+                    transferToAccount = trn.linkedAccount
+                } else {
+                    transferToAccount = trn.account
+                    selectedAccount = trn.linkedAccount
+                }
+            } else {
+                kind = amt < 0 ? .expense : .income
+                amountText = String(format: "%.2f", abs(amt))
+                selectedAccount = trn.account
+            }
             selectedCategory = trn.category
-            selectedPayee = trn.payee
             payeeName = trn.payee?.name ?? ""
             memo = trn.memo ?? ""
             checkNumber = trn.checkNumber ?? ""
@@ -214,7 +241,23 @@ struct TransactionEditorView: View {
             return
         }
 
-        let signedAmount = isExpense ? -amountDouble : amountDouble
+        if kind == .transfer {
+            guard let toAcct = transferToAccount else {
+                errorMessage = "Select a destination account"
+                return
+            }
+            guard toAcct != selectedAccount else {
+                errorMessage = "Source and destination must differ"
+                return
+            }
+            saveTransfer(amount: amountDouble, from: selectedAccount!, to: toAcct)
+        } else {
+            saveRegular(amount: amountDouble)
+        }
+    }
+
+    private func saveRegular(amount: Double) {
+        let signedAmount = kind == .expense ? -amount : amount
         let trn = transaction ?? Transaction(context: viewContext)
 
         trn.date = date
@@ -224,8 +267,77 @@ struct TransactionEditorView: View {
         trn.memo = memo.isEmpty ? nil : memo
         trn.checkNumber = checkNumber.isEmpty ? nil : checkNumber
         trn.clearedStatus = clearedStatus
+        trn.isTransfer = false
+        trn.transferGroupID = nil
+        trn.linkedAccount = nil
 
-        // Resolve payee — find existing or create new
+        resolvePayee(for: trn)
+
+        if transaction == nil {
+            trn.sourceType = TransactionSourceType.manual.rawValue
+            trn.moneyID = 0
+        }
+
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            errorMessage = "Save failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func saveTransfer(amount: Double, from: Account, to: Account) {
+        if let existing = transaction {
+            deleteTransferPair(existing)
+        }
+
+        let groupID = UUID().uuidString
+
+        let outflow = Transaction(context: viewContext)
+        outflow.date = date
+        outflow.amount = NSDecimalNumber(value: -amount)
+        outflow.account = from
+        outflow.linkedAccount = to
+        outflow.isTransfer = true
+        outflow.transferGroupID = groupID
+        outflow.memo = memo.isEmpty ? nil : memo
+        outflow.clearedStatus = clearedStatus
+        outflow.sourceType = TransactionSourceType.manual.rawValue
+        outflow.moneyID = 0
+
+        let inflow = Transaction(context: viewContext)
+        inflow.date = date
+        inflow.amount = NSDecimalNumber(value: amount)
+        inflow.account = to
+        inflow.linkedAccount = from
+        inflow.isTransfer = true
+        inflow.transferGroupID = groupID
+        inflow.memo = memo.isEmpty ? nil : memo
+        inflow.clearedStatus = clearedStatus
+        inflow.sourceType = TransactionSourceType.manual.rawValue
+        inflow.moneyID = 0
+
+        do {
+            try viewContext.save()
+            dismiss()
+        } catch {
+            errorMessage = "Save failed: \(error.localizedDescription)"
+        }
+    }
+
+    private func deleteTransferPair(_ trn: Transaction) {
+        if let gid = trn.transferGroupID, !gid.isEmpty {
+            let request = Transaction.fetchRequest()
+            request.predicate = NSPredicate(format: "transferGroupID == %@", gid)
+            if let pair = try? viewContext.fetch(request) {
+                for t in pair { viewContext.delete(t) }
+            }
+        } else {
+            viewContext.delete(trn)
+        }
+    }
+
+    private func resolvePayee(for trn: Transaction) {
         if !payeeName.isEmpty {
             if let existing = payees.first(where: {
                 $0.name?.lowercased() == payeeName.lowercased()
@@ -241,27 +353,13 @@ struct TransactionEditorView: View {
         } else {
             trn.payee = nil
         }
-
-        // Mark as manual if new
-        if transaction == nil {
-            trn.isManual = true
-            trn.sourceType = TransactionSourceType.manual.rawValue
-            trn.moneyID = 0
-        }
-
-        do {
-            try viewContext.save()
-            dismiss()
-        } catch {
-            errorMessage = "Save failed: \(error.localizedDescription)"
-        }
     }
 
     // MARK: - Delete
 
     private func deleteTransaction() {
         guard let trn = transaction else { return }
-        viewContext.delete(trn)
+        deleteTransferPair(trn)
         do {
             try viewContext.save()
             dismiss()
