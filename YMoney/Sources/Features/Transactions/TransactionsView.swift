@@ -74,7 +74,7 @@ struct TransactionsView: View {
                             .font(.caption)
                             .foregroundStyle(.blue)
                     }
-                    Text(trn.payee?.name ?? trn.category?.fullName ?? "Transaction")
+                    Text(transactionTitle(trn))
                         .font(.subheadline)
                         .lineLimit(1)
                 }
@@ -85,9 +85,26 @@ struct TransactionsView: View {
                         Text(acctName)
                             .lineLimit(1)
                     }
+                    if trn.isCashLeg {
+                        Text("·")
+                        Text("Cash")
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                // Deep link to linked account
+                if trn.isTransfer, let linkedAcct = trn.linkedAccount {
+                    NavigationLink {
+                        AccountDetailView(account: linkedAcct)
+                    } label: {
+                        Label(linkedAcct.name ?? "Account", systemImage: "arrow.right.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             Spacer()
@@ -97,5 +114,13 @@ struct TransactionsView: View {
                 .foregroundStyle(CurrencyFormatter.isPositive(trn.amount) ? .green : .red)
         }
         .padding(.vertical, 2)
+    }
+
+    private func transactionTitle(_ trn: Transaction) -> String {
+        if trn.isTransfer, let linked = trn.linkedAccount {
+            let direction = (trn.amount?.doubleValue ?? 0) >= 0 ? "from" : "to"
+            return "Transfer \(direction) \(linked.name ?? "Account")"
+        }
+        return trn.payee?.name ?? trn.category?.fullName ?? "Transaction"
     }
 }

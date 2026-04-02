@@ -37,8 +37,37 @@ struct TransactionDetailView: View {
 
             if transaction.isTransfer {
                 Section("Transfer") {
-                    Label("This is a transfer between accounts", systemImage: "arrow.left.arrow.right")
-                        .foregroundStyle(.blue)
+                    if transaction.isInternalTransfer {
+                        Label("Internal transfer (investment ↔ cash)", systemImage: "arrow.triangle.2.circlepath")
+                            .foregroundStyle(.secondary)
+                    } else if let linkedAcct = transaction.linkedAccount {
+                        NavigationLink {
+                            AccountDetailView(account: linkedAcct)
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.left.arrow.right")
+                                    .foregroundStyle(.blue)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    let direction = (transaction.amount?.doubleValue ?? 0) >= 0 ? "From" : "To"
+                                    Text("\(direction) \(linkedAcct.name ?? "Account")")
+                                        .font(.subheadline)
+                                    Text("Tap to view account")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    } else {
+                        Label("Transfer between accounts", systemImage: "arrow.left.arrow.right")
+                            .foregroundStyle(.blue)
+                    }
+                }
+            }
+
+            if transaction.isCashLeg {
+                Section {
+                    Label("Cash leg of investment transaction", systemImage: "dollarsign.circle")
+                        .foregroundStyle(.orange)
                 }
             }
 

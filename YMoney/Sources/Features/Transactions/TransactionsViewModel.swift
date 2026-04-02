@@ -37,6 +37,9 @@ final class TransactionsViewModel {
     private func applyFilter() {
         var result = transactions
 
+        // Always hide internal transfers (investment ↔ its own cash leg)
+        result = result.filter { !$0.isInternalTransfer }
+
         if let acct = selectedAccountFilter {
             result = result.filter { $0.account == acct }
         }

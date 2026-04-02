@@ -12,6 +12,12 @@ actor MoneyImportService {
     private var securitiesByMoneyID: [Int32: Security] = [:]
     private var transactionsByMoneyID: [Int32: Transaction] = [:]
     private var lotsByMoneyID: [Int32: Lot] = [:]
+    // Tracks which Money account IDs are cash companions absorbed into investment accounts
+    private var cashCompanionIDs: Set<Int32> = []
+    // Maps cash companion Money ID -> parent investment account
+    private var cashToInvestmentMap: [Int32: Int32] = [:]
+    // Maps Money account ID -> original account ID for reparented transactions
+    private var originalAccountIDs: [Int32: Int32] = [:]
     private var fiByMoneyID: [Int32: FinancialInstitution] = [:]
 
     init(context: NSManagedObjectContext) {
@@ -45,6 +51,7 @@ actor MoneyImportService {
         importTransactions(json["TRN"] as? [[String: Any]] ?? [])
         importInvestmentDetails(json["TRN_INV"] as? [[String: Any]] ?? [])
         importTransfers(json["TRN_XFER"] as? [[String: Any]] ?? [])
+        resolveTransferLinks()
         importLots(json["LOT"] as? [[String: Any]] ?? [])
         importBudgets(json: json)
 
@@ -130,9 +137,37 @@ actor MoneyImportService {
     // MARK: - Accounts
 
     private func importAccounts(_ rows: [[String: Any]]) {
+        // First pass: identify cash companion accounts (hacctRel links them)
         for row in rows {
+            let moneyID = intVal(row["hacct"])
+            let relatedID = intVal(row["hacctRel"])
+            let accountType = intVal(row["at"])
+
+            // If this is a non-investment account that is related to another account,
+            // check if the related account is an investment account
+            if accountType != 5 && relatedID > 0 {
+                // Find the related account in the raw data
+                let relatedRow = rows.first { intVal($0["hacct"]) == relatedID }
+                let relatedType = intVal(relatedRow?["at"])
+                if relatedType == 5 {
+                    // This is a cash companion to an investment account
+                    cashCompanionIDs.insert(moneyID)
+                    cashToInvestmentMap[moneyID] = relatedID
+                }
+            }
+        }
+
+        // Second pass: create accounts, skip cash companions
+        for row in rows {
+            let moneyID = intVal(row["hacct"])
+
+            // Skip cash companion accounts — their transactions will be merged
+            if cashCompanionIDs.contains(moneyID) {
+                continue
+            }
+
             let acct = Account(context: context)
-            acct.moneyID = intVal(row["hacct"])
+            acct.moneyID = moneyID
             acct.name = (row["szFull"] as? String) ?? "Unknown"
             acct.accountType = intVal(row["at"])
             acct.isClosed = boolVal(row["fClosed"])
@@ -143,6 +178,12 @@ actor MoneyImportService {
             acct.currencyID = intVal(row["hcrnc"])
             acct.groupType = intVal(row["grp"])
 
+            // Record if this investment account has a cash companion
+            let relatedID = intVal(row["hacctRel"])
+            if acct.accountType == 5 && relatedID > 0 && cashCompanionIDs.contains(relatedID) {
+                acct.cashCompanionMoneyID = relatedID
+            }
+
             // Link financial institution
             let fiID = intVal(row["hfi"])
             if fiID > 0 {
@@ -150,6 +191,13 @@ actor MoneyImportService {
             }
 
             accountsByMoneyID[acct.moneyID] = acct
+        }
+
+        // Also map cash companion IDs to the investment account object
+        for (cashID, investID) in cashToInvestmentMap {
+            if let investAcct = accountsByMoneyID[investID] {
+                accountsByMoneyID[cashID] = investAcct
+            }
         }
     }
 
@@ -167,9 +215,20 @@ actor MoneyImportService {
             trn.actionType = intVal(row["act"])
             trn.transactionFlags = intVal(row["grftt"])
 
-            // Link account
-            let acctID = intVal(row["hacct"])
-            trn.account = accountsByMoneyID[acctID]
+            // Determine the original Money account ID for this transaction
+            let rawAcctID = intVal(row["hacct"])
+
+            // If this transaction belongs to a cash companion, mark it
+            if cashCompanionIDs.contains(rawAcctID) {
+                trn.isCashLeg = true
+            }
+
+            // The accountsByMoneyID map already redirects cash companion IDs
+            // to the parent investment account
+            trn.account = accountsByMoneyID[rawAcctID]
+
+            // Track original account ID for transfer resolution later
+            originalAccountIDs[trn.moneyID] = rawAcctID
 
             // Link category
             let catID = intVal(row["hcat"])
@@ -215,13 +274,45 @@ actor MoneyImportService {
             let fromID = intVal(row["htrnFrom"])
             let linkID = intVal(row["htrnLink"])
 
-            if let fromTrn = transactionsByMoneyID[fromID] {
-                fromTrn.isTransfer = true
-                fromTrn.linkedTransactionID = linkID
+            guard let fromTrn = transactionsByMoneyID[fromID],
+                  let linkTrn = transactionsByMoneyID[linkID] else { continue }
+
+            let fromOrigAcct = originalAccountIDs[fromID] ?? 0
+            let linkOrigAcct = originalAccountIDs[linkID] ?? 0
+
+            // Determine if this is an internal transfer (between an investment
+            // account and its cash companion — same merged account)
+            let fromIsCash = cashCompanionIDs.contains(fromOrigAcct)
+            let linkIsCash = cashCompanionIDs.contains(linkOrigAcct)
+            let fromParent = cashToInvestmentMap[fromOrigAcct] ?? fromOrigAcct
+            let linkParent = cashToInvestmentMap[linkOrigAcct] ?? linkOrigAcct
+
+            let isInternal = fromParent == linkParent
+
+            fromTrn.isTransfer = true
+            fromTrn.linkedTransactionID = linkID
+            linkTrn.isTransfer = true
+            linkTrn.linkedTransactionID = fromID
+
+            if isInternal {
+                // Both sides are within the same merged account
+                fromTrn.isInternalTransfer = true
+                linkTrn.isInternalTransfer = true
             }
-            if let linkTrn = transactionsByMoneyID[linkID] {
-                linkTrn.isTransfer = true
-                linkTrn.linkedTransactionID = fromID
+        }
+    }
+
+    /// After transfers are imported, resolve linkedAccount references
+    /// so the UI can deep-link to the other account in a transfer.
+    private func resolveTransferLinks() {
+        for (_, trn) in transactionsByMoneyID {
+            guard trn.isTransfer, trn.linkedTransactionID > 0 else { continue }
+            if let linkedTrn = transactionsByMoneyID[trn.linkedTransactionID] {
+                // The linked account is the account of the OTHER transaction
+                // But since cash companions are merged, use the merged account
+                if linkedTrn.account != trn.account {
+                    trn.linkedAccount = linkedTrn.account
+                }
             }
         }
     }

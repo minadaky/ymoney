@@ -66,8 +66,8 @@ final class DashboardViewModel {
         let request = Transaction.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         request.fetchLimit = 10
-        // Exclude zero-amount system transactions
-        request.predicate = NSPredicate(format: "amount != 0")
+        // Exclude zero-amount system transactions and internal transfers
+        request.predicate = NSPredicate(format: "amount != 0 AND isInternalTransfer == NO")
 
         recentTransactions = (try? context.fetch(request)) ?? []
     }
