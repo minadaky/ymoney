@@ -79,7 +79,7 @@ struct TransactionsView: View {
         .searchable(text: Binding(
             get: { vm.searchText },
             set: { vm.searchText = $0 }
-        ), isPresented: $isSearching, prompt: "Search payee, category, memo")
+        ), isPresented: $isSearching, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search payee, category, memo")
     }
 
     private func transactionRow(_ trn: Transaction) -> some View {

@@ -29,35 +29,36 @@ struct AccountDetailView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Balance header
-            VStack(spacing: 4) {
-                Text("Balance")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Text(CurrencyFormatter.format(balance))
-                    .font(.title.bold().monospacedDigit())
-                    .foregroundColor(CurrencyFormatter.isPositive(balance) ? Color.primary : Color.red)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(.ultraThinMaterial)
+        ScrollViewReader { proxy in
+            List {
+                // Balance header as list section
+                Section {
+                    VStack(spacing: 4) {
+                        Text("Balance")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(CurrencyFormatter.format(balance))
+                            .font(.title.bold().monospacedDigit())
+                            .foregroundColor(CurrencyFormatter.isPositive(balance) ? Color.primary : Color.red)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .listRowBackground(Color.clear)
 
-            // Filter picker for investment accounts
-            if isInvestmentAccount {
-                Picker("Filter", selection: $filter) {
-                    ForEach(TransactionFilter.allCases, id: \.self) { f in
-                        Text(f.rawValue).tag(f)
+                    // Filter picker for investment accounts
+                    if isInvestmentAccount {
+                        Picker("Filter", selection: $filter) {
+                            ForEach(TransactionFilter.allCases, id: \.self) { f in
+                                Text(f.rawValue).tag(f)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .listRowBackground(Color.clear)
                     }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 8)
-            }
 
-            // Transaction register
-            ScrollViewReader { proxy in
-                List {
+                // Transaction register
+                Section {
                     ForEach(filteredTransactions, id: \.objectID) { trn in
                         NavigationLink {
                             TransactionDetailView(transaction: trn)
@@ -68,16 +69,17 @@ struct AccountDetailView: View {
                         .listRowBackground(
                             trn.objectID == scrollTarget
                                 ? Color.blue.opacity(0.15)
-                                : Color.clear
+                                : nil
                         )
                     }
                 }
-                .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search transactions")
-                .onChange(of: scrollTarget) { _, target in
-                    if let target {
-                        withAnimation {
-                            proxy.scrollTo(target, anchor: .center)
-                        }
+            }
+            .listStyle(.plain)
+            .searchable(text: $searchText, isPresented: $isSearching, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search transactions")
+            .onChange(of: scrollTarget) { _, target in
+                if let target {
+                    withAnimation {
+                        proxy.scrollTo(target, anchor: .center)
                     }
                 }
             }

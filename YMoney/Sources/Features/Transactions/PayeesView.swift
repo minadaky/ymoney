@@ -30,7 +30,7 @@ struct PayeesView: View {
                 }
             }
         }
-        .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search payees")
+        .searchable(text: $searchText, isPresented: $isSearching, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search payees")
         .navigationTitle("Payees")
         .onAppear { loadPayees() }
     }
