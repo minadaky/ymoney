@@ -10,7 +10,8 @@ struct SettingsView: View {
     @State private var overrideURL = QuoteConfiguration.jsOverrideURL ?? ""
     @State private var overrideStatus: OverrideStatus = .idle
     @State private var showDeleteConfirmation = false
-    @State private var showFilePicker = false
+    @State private var showMoneyFilePicker = false
+    @State private var showOFXFilePicker = false
     @State private var isImporting = false
     @State private var statusMessage: String?
     @State private var statusIsError = false
@@ -144,7 +145,14 @@ struct SettingsView: View {
                 }
 
                 Button {
-                    showFilePicker = true
+                    showOFXFilePicker = true
+                } label: {
+                    Label("Import OFX File", systemImage: "arrow.down.doc.fill")
+                }
+                .disabled(isImporting)
+
+                Button {
+                    showMoneyFilePicker = true
                 } label: {
                     Label("Import Money File (.json)", systemImage: "square.and.arrow.down")
                 }
@@ -182,7 +190,8 @@ struct SettingsView: View {
             }
 
             Section("Format Support") {
-                Label("Read: .mny → JSON export", systemImage: "arrow.down.doc")
+                Label("Import: OFX 1.x (SGML) & 2.x (XML)", systemImage: "arrow.down.doc")
+                Label("Import: .mny → JSON export", systemImage: "arrow.down.doc")
                 Label("Export: OFX 2.0", systemImage: "arrow.up.doc")
             }
         }
@@ -195,11 +204,20 @@ struct SettingsView: View {
             Text("This will permanently remove all accounts, transactions, categories, payees, investments, and budgets. You'll need to re-import a Money file to use the app.")
         }
         .fileImporter(
-            isPresented: $showFilePicker,
+            isPresented: $showMoneyFilePicker,
             allowedContentTypes: [UTType.json],
             allowsMultipleSelection: false
         ) { result in
-            handleFileImport(result)
+            handleMoneyFileImport(result)
+        }
+        .fileImporter(
+            isPresented: $showOFXFilePicker,
+            allowedContentTypes: [UTType(filenameExtension: "ofx") ?? .plainText,
+                                  UTType(filenameExtension: "qfx") ?? .plainText,
+                                  .plainText],
+            allowsMultipleSelection: false
+        ) { result in
+            handleOFXFileImport(result)
         }
     }
 
@@ -225,7 +243,7 @@ struct SettingsView: View {
         }
     }
 
-    private func handleFileImport(_ result: Result<[URL], Error>) {
+    private func handleMoneyFileImport(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
             guard let url = urls.first else { return }
@@ -260,6 +278,48 @@ struct SettingsView: View {
                     await MainActor.run {
                         isImporting = false
                         statusMessage = "Import failed: \(error.localizedDescription)"
+                        statusIsError = true
+                    }
+                }
+            }
+
+        case .failure(let error):
+            statusMessage = "File picker error: \(error.localizedDescription)"
+            statusIsError = true
+        }
+    }
+
+    private func handleOFXFileImport(_ result: Result<[URL], Error>) {
+        switch result {
+        case .success(let urls):
+            guard let url = urls.first else { return }
+
+            guard url.startAccessingSecurityScopedResource() else {
+                statusMessage = "Cannot access file"
+                statusIsError = true
+                return
+            }
+
+            isImporting = true
+            statusMessage = nil
+
+            Task {
+                defer { url.stopAccessingSecurityScopedResource() }
+                do {
+                    let service = OFXImportService(context: viewContext)
+                    let importResult = try await service.importOFX(from: url)
+                    UserDefaults.standard.set(true, forKey: "hasImportedData")
+
+                    await MainActor.run {
+                        hasImported = true
+                        isImporting = false
+                        statusMessage = importResult.summary
+                        statusIsError = false
+                    }
+                } catch {
+                    await MainActor.run {
+                        isImporting = false
+                        statusMessage = "OFX import failed: \(error.localizedDescription)"
                         statusIsError = true
                     }
                 }
