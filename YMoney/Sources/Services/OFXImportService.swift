@@ -78,12 +78,11 @@ actor OFXImportService {
 
     private func loadExistingData() async throws {
         try await context.perform { [self] in
-            // Load existing accounts
+            // Load existing accounts keyed by moneyID
             let acctReq = Account.fetchRequest()
             let accounts = try self.context.fetch(acctReq)
             for acct in accounts {
-                let key = acct.name ?? "unknown-\(acct.moneyID)"
-                self.accountsByKey[key] = acct
+                self.accountsByKey["\(acct.moneyID)"] = acct
             }
 
             // Load existing securities
@@ -95,13 +94,13 @@ actor OFXImportService {
                 }
             }
 
-            // Load existing FITIDs for dedup
+            // Load existing FITIDs for dedup (keyed by accountMoneyID:fitId)
             let trnReq = Transaction.fetchRequest()
-            trnReq.propertiesToFetch = ["checkNumber", "moneyID"]
             let txns = try self.context.fetch(trnReq)
             for txn in txns {
-                if let fitId = txn.checkNumber, !fitId.isEmpty {
-                    self.existingFitIds.insert(fitId)
+                if let fitId = txn.checkNumber, !fitId.isEmpty, let acct = txn.account {
+                    let dk = "\(acct.moneyID):\(fitId)"
+                    self.existingFitIds.insert(dk)
                 }
             }
         }
@@ -169,12 +168,13 @@ actor OFXImportService {
 
     private func findOrCreateBankAccount(_ stmt: OFXBankStatement) -> Account {
         let key = "BANK:\(stmt.bankId):\(stmt.acctId)"
-        if let existing = accountsByKey[key] {
+        let mid = Self.stableMoneyID(key)
+        if let existing = accountsByKey["\(mid)"] {
             acctSkipped += 1
             return existing
         }
         let acct = Account(context: context)
-        acct.moneyID = Self.stableMoneyID(key)
+        acct.moneyID = mid
         acct.name = stmt.acctId
         acct.accountType = Self.coreDataAccountType(ofxType: stmt.acctType)
         acct.openingBalance = NSDecimalNumber.zero
@@ -185,38 +185,40 @@ actor OFXImportService {
         let fi = findOrCreateFI(name: "Bank \(stmt.bankId)")
         acct.financialInstitution = fi
 
-        accountsByKey[key] = acct
+        accountsByKey["\(mid)"] = acct
         acctCreated += 1
         return acct
     }
 
     private func findOrCreateCCAccount(_ stmt: OFXCreditCardStatement) -> Account {
         let key = "CC:\(stmt.acctId)"
-        if let existing = accountsByKey[key] {
+        let mid = Self.stableMoneyID(key)
+        if let existing = accountsByKey["\(mid)"] {
             acctSkipped += 1
             return existing
         }
         let acct = Account(context: context)
-        acct.moneyID = Self.stableMoneyID(key)
+        acct.moneyID = mid
         acct.name = stmt.acctId
         acct.accountType = 1
         acct.openingBalance = NSDecimalNumber.zero
         acct.isClosed = false
         acct.isFavorite = false
         acct.currencyID = 1
-        accountsByKey[key] = acct
+        accountsByKey["\(mid)"] = acct
         acctCreated += 1
         return acct
     }
 
     private func findOrCreateInvAccount(_ stmt: OFXInvestmentStatement) -> Account {
         let key = "INV:\(stmt.brokerId):\(stmt.acctId)"
-        if let existing = accountsByKey[key] {
+        let mid = Self.stableMoneyID(key)
+        if let existing = accountsByKey["\(mid)"] {
             acctSkipped += 1
             return existing
         }
         let acct = Account(context: context)
-        acct.moneyID = Self.stableMoneyID(key)
+        acct.moneyID = mid
         acct.name = stmt.acctId
         acct.accountType = 5
         acct.openingBalance = NSDecimalNumber.zero
@@ -227,7 +229,7 @@ actor OFXImportService {
         let fi = findOrCreateFI(name: stmt.brokerId)
         acct.financialInstitution = fi
 
-        accountsByKey[key] = acct
+        accountsByKey["\(mid)"] = acct
         acctCreated += 1
         return acct
     }

@@ -1,5 +1,9 @@
 import Foundation
 import CoreData
+@testable import YMoney
+
+/// Type alias to avoid conflict with Apple's Security framework.
+typealias SecurityEntity = YMoney.Security
 
 /// Shared utilities for OFX import tests.
 /// Provides an in-memory Core Data stack, fixture loading, and validation helpers.
@@ -10,7 +14,6 @@ enum OFXTestHelpers {
     /// Root of the TestData directory resolved from the test source file.
     static func testDataRoot(filePath: String = #filePath) -> URL {
         URL(fileURLWithPath: filePath)
-            .deletingLastPathComponent() // Helpers/
             .deletingLastPathComponent() // OFXImportTests/
             .deletingLastPathComponent() // Tests/
             .deletingLastPathComponent() // YMoney/
@@ -76,7 +79,7 @@ enum OFXTestHelpers {
 
     /// Total number of securities.
     static func totalSecurityCount(in context: NSManagedObjectContext) throws -> Int {
-        let request = Security.fetchRequest()
+        let request = SecurityEntity.fetchRequest()
         return try context.count(for: request)
     }
 
@@ -160,7 +163,7 @@ enum OFXTestHelpers {
 
     /// Security types present in the database.
     static func securityTypes(in context: NSManagedObjectContext) throws -> Set<Int32> {
-        let request = Security.fetchRequest()
+        let request = SecurityEntity.fetchRequest()
         let secs = try context.fetch(request)
         return Set(secs.map { s in s.securityType })
     }
