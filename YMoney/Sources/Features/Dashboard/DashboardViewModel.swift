@@ -27,7 +27,7 @@ final class DashboardViewModel {
     private func loadAccounts() {
         let request = Account.fetchRequest()
         request.predicate = NSPredicate(format: "isClosed == NO")
-        request.sortDescriptors = [NSSortDescriptor(key: "accountType", ascending: true)]
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
         guard let accounts = try? context.fetch(request) else { return }
 
@@ -37,19 +37,14 @@ final class DashboardViewModel {
         var investment = NSDecimalNumber.zero
         var balances: [NSManagedObjectID: NSDecimalNumber] = [:]
 
-        // Debt account types: Credit Card (1), Liability (7), Loan (9)
-        let debtTypes: Set<Int32> = [1, 7, 9]
-        // Investment types
-        let investTypes: Set<Int32> = [5, 10, 11]
-
         for account in accounts {
             let balance = computeBalance(for: account)
             balances[account.objectID] = balance
             total = total.adding(balance)
 
-            if debtTypes.contains(account.accountType) {
+            if account.ofxAccountType.isDebt {
                 debt = debt.adding(balance)
-            } else if investTypes.contains(account.accountType) {
+            } else if account.ofxAccountType.isInvestment {
                 investment = investment.adding(balance)
             } else {
                 banking = banking.adding(balance)

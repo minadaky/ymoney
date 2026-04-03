@@ -78,8 +78,8 @@ struct DashboardView: View {
                     AccountDetailView(account: account)
                 } label: {
                     HStack {
-                        Image(systemName: accountIcon(for: account.accountType))
-                            .foregroundStyle(accountColor(for: account.accountType))
+                        Image(systemName: accountIcon(for: account))
+                            .foregroundStyle(accountColor(for: account))
                             .frame(width: 24)
                         Text(account.name ?? "Unknown")
                             .font(.subheadline)
@@ -141,39 +141,23 @@ struct DashboardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    private func accountIcon(for type: Int32) -> String {
-        switch type {
-        case 0: return "building.columns"
-        case 1: return "creditcard"
-        case 2: return "banknote"
-        case 3: return "dollarsign.circle"
-        case 4: return "building"
-        case 5: return "chart.line.uptrend.xyaxis"
-        case 6: return "house"
-        case 7: return "minus.circle"
-        case 8: return "lock"
-        case 9: return "percent"
-        case 10: return "briefcase"
-        case 11: return "heart"
-        default: return "questionmark.circle"
-        }
+    private func accountIcon(for account: Account) -> String {
+        account.ofxAccountType.icon
     }
 
-    private func accountColor(for type: Int32) -> Color {
-        switch type {
-        case 0: return .blue
-        case 1: return .orange
-        case 2: return .teal
-        case 3: return .green
-        case 4: return .cyan
-        case 5: return .purple
-        case 6: return .brown
-        case 7: return .pink
-        case 8: return .indigo
-        case 9: return .red
-        case 10: return .mint
-        case 11: return .mint
-        default: return .gray
+    private func accountColor(for account: Account) -> Color {
+        switch account.ofxAccountType {
+        case .checking:       return .blue
+        case .savings:        return .teal
+        case .creditCard:     return .orange
+        case .cash:           return .green
+        case .moneyMarket:    return .cyan
+        case .investment:     return .purple
+        case .asset:          return .brown
+        case .liability:      return .pink
+        case .cd:             return .indigo
+        case .loan:           return .red
+        case .retirement401k, .ira: return .mint
         }
     }
 }

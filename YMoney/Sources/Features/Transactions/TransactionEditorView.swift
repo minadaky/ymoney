@@ -1,13 +1,6 @@
 import SwiftUI
 import CoreData
 
-/// Source type for transaction provenance tracking
-enum TransactionSourceType: Int16 {
-    case mnyImport = 0
-    case manual = 1
-    case ofxImport = 2
-}
-
 /// The kind of transaction the user is entering
 enum TransactionKind: String, CaseIterable {
     case expense = "Expense"
@@ -32,7 +25,7 @@ struct TransactionEditorView: View {
     @State private var payeeName = ""
     @State private var memo = ""
     @State private var checkNumber = ""
-    @State private var clearedStatus: Int32 = 0
+    @State private var clearedStatus: String = ClearedStatus.uncleared.rawValue
 
     @State private var accounts: [Account] = []
     @State private var payees: [Payee] = []
@@ -120,9 +113,9 @@ struct TransactionEditorView: View {
                     }
 
                     Picker("Status", selection: $clearedStatus) {
-                        Text("Uncleared").tag(Int32(0))
-                        Text("Cleared").tag(Int32(1))
-                        Text("Reconciled").tag(Int32(2))
+                        Text("Uncleared").tag(ClearedStatus.uncleared.rawValue)
+                        Text("Cleared").tag(ClearedStatus.cleared.rawValue)
+                        Text("Reconciled").tag(ClearedStatus.reconciled.rawValue)
                     }
                 }
 
@@ -225,7 +218,7 @@ struct TransactionEditorView: View {
             payeeName = trn.payee?.name ?? ""
             memo = trn.memo ?? ""
             checkNumber = trn.checkNumber ?? ""
-            clearedStatus = trn.clearedStatus
+            clearedStatus = trn.clearedStatus ?? ClearedStatus.uncleared.rawValue
         }
     }
 
@@ -275,7 +268,7 @@ struct TransactionEditorView: View {
 
         if transaction == nil {
             trn.sourceType = TransactionSourceType.manual.rawValue
-            trn.moneyID = 0
+            trn.sourceID = 0
         }
 
         do {
@@ -303,7 +296,7 @@ struct TransactionEditorView: View {
         outflow.memo = memo.isEmpty ? nil : memo
         outflow.clearedStatus = clearedStatus
         outflow.sourceType = TransactionSourceType.manual.rawValue
-        outflow.moneyID = 0
+        outflow.sourceID = 0
 
         let inflow = Transaction(context: viewContext)
         inflow.date = date
@@ -315,7 +308,7 @@ struct TransactionEditorView: View {
         inflow.memo = memo.isEmpty ? nil : memo
         inflow.clearedStatus = clearedStatus
         inflow.sourceType = TransactionSourceType.manual.rawValue
-        inflow.moneyID = 0
+        inflow.sourceID = 0
 
         do {
             try viewContext.save()
@@ -346,7 +339,7 @@ struct TransactionEditorView: View {
             } else {
                 let newPayee = Payee(context: viewContext)
                 newPayee.name = payeeName
-                newPayee.moneyID = 0
+                newPayee.sourceID = 0
                 newPayee.isHidden = false
                 trn.payee = newPayee
             }

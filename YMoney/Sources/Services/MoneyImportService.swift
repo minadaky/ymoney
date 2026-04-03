@@ -6,19 +6,19 @@ actor MoneyImportService {
     private let context: NSManagedObjectContext
 
     // Lookup tables built during import
-    private var accountsByMoneyID: [Int32: Account] = [:]
-    private var categoriesByMoneyID: [Int32: Category] = [:]
-    private var payeesByMoneyID: [Int32: Payee] = [:]
-    private var securitiesByMoneyID: [Int32: Security] = [:]
-    private var transactionsByMoneyID: [Int32: Transaction] = [:]
-    private var lotsByMoneyID: [Int32: Lot] = [:]
+    private var accountsBySourceID: [Int32: Account] = [:]
+    private var categoriesBySourceID: [Int32: Category] = [:]
+    private var payeesBySourceID: [Int32: Payee] = [:]
+    private var securitiesBySourceID: [Int32: Security] = [:]
+    private var transactionsBySourceID: [Int32: Transaction] = [:]
+    private var lotsBySourceID: [Int32: Lot] = [:]
     // Tracks which Money account IDs are cash companions absorbed into investment accounts
     private var cashCompanionIDs: Set<Int32> = []
     // Maps cash companion Money ID -> parent investment account
     private var cashToInvestmentMap: [Int32: Int32] = [:]
     // Maps Money account ID -> original account ID for reparented transactions
     private var originalAccountIDs: [Int32: Int32] = [:]
-    private var fiByMoneyID: [Int32: FinancialInstitution] = [:]
+    private var fiBySourceID: [Int32: FinancialInstitution] = [:]
 
     init(context: NSManagedObjectContext) {
         self.context = context
@@ -67,7 +67,7 @@ actor MoneyImportService {
     private func importCurrencies(_ rows: [[String: Any]]) {
         for row in rows {
             let currency = Currency(context: context)
-            currency.moneyID = intVal(row["hcrnc"])
+            currency.sourceID = intVal(row["hcrnc"])
             currency.name = row["szFull"] as? String
             currency.symbol = row["szSymbol"] as? String
             currency.isoCode = row["szISOCode"] as? String
@@ -79,10 +79,10 @@ actor MoneyImportService {
     private func importFinancialInstitutions(_ rows: [[String: Any]]) {
         for row in rows {
             let fi = FinancialInstitution(context: context)
-            fi.moneyID = intVal(row["hfi"])
+            fi.sourceID = intVal(row["hfi"])
             fi.name = (row["szFull"] as? String) ?? "Unknown"
             fi.notes = row["mComment"] as? String
-            fiByMoneyID[fi.moneyID] = fi
+            fiBySourceID[fi.sourceID] = fi
         }
     }
 
@@ -92,21 +92,21 @@ actor MoneyImportService {
         // First pass: create all categories
         for row in rows {
             let cat = Category(context: context)
-            cat.moneyID = intVal(row["hcat"])
+            cat.sourceID = intVal(row["hcat"])
             cat.fullName = (row["szFull"] as? String) ?? "Unknown"
             cat.level = intVal(row["nLevel"])
             cat.isTaxRelated = boolVal(row["fTax"])
             cat.isBusiness = boolVal(row["fBusiness"])
             cat.isHidden = boolVal(row["fHidden"])
-            categoriesByMoneyID[cat.moneyID] = cat
+            categoriesBySourceID[cat.sourceID] = cat
         }
 
         // Second pass: set parent relationships
         for row in rows {
-            let moneyID = intVal(row["hcat"])
+            let sourceID = intVal(row["hcat"])
             if let parentID = row["hcatParent"] as? Int, parentID > 0 {
-                let cat = categoriesByMoneyID[Int32(moneyID)]
-                cat?.parent = categoriesByMoneyID[Int32(parentID)]
+                let cat = categoriesBySourceID[Int32(sourceID)]
+                cat?.parent = categoriesBySourceID[Int32(parentID)]
             }
         }
     }
@@ -116,10 +116,10 @@ actor MoneyImportService {
     private func importPayees(_ rows: [[String: Any]]) {
         for row in rows {
             let payee = Payee(context: context)
-            payee.moneyID = intVal(row["hpay"])
+            payee.sourceID = intVal(row["hpay"])
             payee.name = (row["szFull"] as? String) ?? "Unknown"
             payee.isHidden = boolVal(row["fHidden"])
-            payeesByMoneyID[payee.moneyID] = payee
+            payeesBySourceID[payee.sourceID] = payee
         }
     }
 
@@ -128,13 +128,13 @@ actor MoneyImportService {
     private func importSecurities(_ rows: [[String: Any]]) {
         for row in rows {
             let sec = Security(context: context)
-            sec.moneyID = intVal(row["hsec"])
+            sec.sourceID = intVal(row["hsec"])
             sec.name = (row["szFull"] as? String) ?? "Unknown"
             sec.symbol = row["szSymbol"] as? String
             sec.exchange = row["szExchg"] as? String
-            sec.securityType = intVal(row["sct"])
+            sec.securityType = OFXSecurityType.fromMoneyType(intVal(row["sct"])).rawValue
             sec.isHidden = boolVal(row["fHidden"])
-            securitiesByMoneyID[sec.moneyID] = sec
+            securitiesBySourceID[sec.sourceID] = sec
         }
     }
 
@@ -143,7 +143,7 @@ actor MoneyImportService {
     private func importAccounts(_ rows: [[String: Any]]) {
         // First pass: identify cash companion accounts (hacctRel links them)
         for row in rows {
-            let moneyID = intVal(row["hacct"])
+            let sourceID = intVal(row["hacct"])
             let relatedID = intVal(row["hacctRel"])
             let accountType = intVal(row["at"])
 
@@ -155,69 +155,84 @@ actor MoneyImportService {
                 let relatedType = intVal(relatedRow?["at"])
                 if relatedType == 5 {
                     // This is a cash companion to an investment account
-                    cashCompanionIDs.insert(moneyID)
-                    cashToInvestmentMap[moneyID] = relatedID
+                    cashCompanionIDs.insert(sourceID)
+                    cashToInvestmentMap[sourceID] = relatedID
                 }
             }
         }
 
         // Second pass: create accounts, skip cash companions
         for row in rows {
-            let moneyID = intVal(row["hacct"])
+            let sourceID = intVal(row["hacct"])
 
             // Skip cash companion accounts — their transactions will be merged
-            if cashCompanionIDs.contains(moneyID) {
+            if cashCompanionIDs.contains(sourceID) {
                 continue
             }
 
             let acct = Account(context: context)
-            acct.moneyID = moneyID
+            acct.sourceID = sourceID
             acct.name = (row["szFull"] as? String) ?? "Unknown"
-            acct.accountType = intVal(row["at"])
+            acct.accountType = OFXAccountType.fromMoneyType(intVal(row["at"])).rawValue
             acct.isClosed = boolVal(row["fClosed"])
             acct.isFavorite = boolVal(row["fFavorite"])
             acct.notes = row["mComment"] as? String
             acct.openDate = Date.fromMoneyString(row["dtOpen"] as? String)
             acct.openingBalance = decimalVal(row["amtOpen"])
             acct.currencyID = intVal(row["hcrnc"])
-            acct.groupType = intVal(row["grp"])
 
             // Record if this investment account has a cash companion
             let relatedID = intVal(row["hacctRel"])
-            if acct.accountType == 5 && relatedID > 0 && cashCompanionIDs.contains(relatedID) {
-                acct.cashCompanionMoneyID = relatedID
+            if acct.ofxAccountType == .investment && relatedID > 0 && cashCompanionIDs.contains(relatedID) {
+                acct.hasCashCompanion = true
             }
 
             // Link financial institution
             let fiID = intVal(row["hfi"])
             if fiID > 0 {
-                acct.financialInstitution = fiByMoneyID[fiID]
+                acct.financialInstitution = fiBySourceID[fiID]
             }
 
-            accountsByMoneyID[acct.moneyID] = acct
+            accountsBySourceID[acct.sourceID] = acct
         }
 
         // Also map cash companion IDs to the investment account object
         for (cashID, investID) in cashToInvestmentMap {
-            if let investAcct = accountsByMoneyID[investID] {
-                accountsByMoneyID[cashID] = investAcct
+            if let investAcct = accountsBySourceID[investID] {
+                accountsBySourceID[cashID] = investAcct
             }
         }
     }
 
     // MARK: - Transactions
 
+    /// Top-level Money category IDs that are generic buckets (INCOME=130, EXPENSE=131)
+    private static let genericCategoryIDs: Set<Int32> = [130, 131]
+
+    /// Maps Money category IDs to OFX income types
+    private static let categoryToIncomeType: [Int32: String] = [
+        133: "div",      // Dividends
+        134: "int",      // Interest
+        135: "cglong",   // Capital Gains (default to long-term)
+    ]
+
     private func importTransactions(_ rows: [[String: Any]]) {
         for row in rows {
             let trn = Transaction(context: context)
-            trn.moneyID = intVal(row["htrn"])
+            trn.sourceID = intVal(row["htrn"])
             trn.date = Date.fromMoneyString(row["dt"] as? String) ?? Date()
             trn.amount = decimalVal(row["amt"])
             trn.memo = row["mMemo"] as? String
             trn.checkNumber = row["szId"] as? String
-            trn.clearedStatus = intVal(row["cs"])
-            trn.actionType = intVal(row["act"])
-            trn.transactionFlags = intVal(row["grftt"])
+            trn.clearedStatus = ClearedStatus.fromMoneyStatus(intVal(row["cs"])).rawValue
+
+            // Map Money action type → OFX transaction type
+            let moneyAct = intVal(row["act"])
+            let catID = intVal(row["hcat"])
+            let hasSecID = intVal(row["hsec"]) > 0
+            let mapped = Self.mapTransactionType(moneyAct: moneyAct, catID: catID, hasSecurity: hasSecID, amount: trn.amount)
+            trn.transactionType = mapped.type
+            trn.incomeType = mapped.incomeType
 
             // Determine the original Money account ID for this transaction
             let rawAcctID = intVal(row["hacct"])
@@ -227,32 +242,68 @@ actor MoneyImportService {
                 trn.isCashLeg = true
             }
 
-            // The accountsByMoneyID map already redirects cash companion IDs
+            // The accountsBySourceID map already redirects cash companion IDs
             // to the parent investment account
-            trn.account = accountsByMoneyID[rawAcctID]
+            trn.account = accountsBySourceID[rawAcctID]
 
             // Track original account ID for transfer resolution later
-            originalAccountIDs[trn.moneyID] = rawAcctID
+            originalAccountIDs[trn.sourceID] = rawAcctID
 
-            // Link category
-            let catID = intVal(row["hcat"])
-            if catID > 0 {
-                trn.category = categoriesByMoneyID[catID]
+            // Link category — skip generic INCOME/EXPENSE buckets for investment transactions
+            if catID > 0 && !Self.genericCategoryIDs.contains(catID) {
+                trn.category = categoriesBySourceID[catID]
+            } else if catID > 0 && !hasSecID {
+                // Non-investment transactions keep their category even if generic
+                trn.category = categoriesBySourceID[catID]
             }
 
             // Link payee
             let payID = intVal(row["lHpay"])
             if payID > 0 {
-                trn.payee = payeesByMoneyID[payID]
+                trn.payee = payeesBySourceID[payID]
             }
 
             // Link security (for investment transactions)
             let secID = intVal(row["hsec"])
             if secID > 0 {
-                trn.security = securitiesByMoneyID[secID]
+                trn.security = securitiesBySourceID[secID]
             }
 
-            transactionsByMoneyID[trn.moneyID] = trn
+            transactionsBySourceID[trn.sourceID] = trn
+        }
+    }
+
+    /// Maps a Money `act` value to our OFX-aligned transaction type and optional income type
+    private static func mapTransactionType(
+        moneyAct: Int32,
+        catID: Int32,
+        hasSecurity: Bool,
+        amount: NSDecimalNumber?
+    ) -> (type: String, incomeType: String?) {
+        switch moneyAct {
+        case 1:  // Buy
+            return ("buy", nil)
+        case 2:  // Sell
+            return ("sell", nil)
+        case 3:  // Dividend
+            let income = categoryToIncomeType[catID] ?? "div"
+            return ("income", income)
+        case 4:  // Interest
+            return ("income", "int")
+        case 12: // Reinvest
+            let income = categoryToIncomeType[catID] ?? "div"
+            return ("reinvest", income)
+        case 5:  // Transfer
+            return ("xfer", nil)
+        default:
+            // For unknown types, infer from amount sign
+            if hasSecurity {
+                // Investment account transaction without clear type
+                let amt = amount?.doubleValue ?? 0
+                return (amt >= 0 ? "credit" : "debit", nil)
+            }
+            let amt = amount?.doubleValue ?? 0
+            return (amt >= 0 ? "credit" : "debit", nil)
         }
     }
 
@@ -261,7 +312,7 @@ actor MoneyImportService {
     private func importInvestmentDetails(_ rows: [[String: Any]]) {
         for row in rows {
             let trnID = intVal(row["htrn"])
-            guard let trn = transactionsByMoneyID[trnID] else { continue }
+            guard let trn = transactionsBySourceID[trnID] else { continue }
 
             let detail = InvestmentDetail(context: context)
             detail.price = doubleVal(row["dPrice"])
@@ -278,8 +329,8 @@ actor MoneyImportService {
             let fromID = intVal(row["htrnFrom"])
             let linkID = intVal(row["htrnLink"])
 
-            guard let fromTrn = transactionsByMoneyID[fromID],
-                  let linkTrn = transactionsByMoneyID[linkID] else { continue }
+            guard let fromTrn = transactionsBySourceID[fromID],
+                  let linkTrn = transactionsBySourceID[linkID] else { continue }
 
             let fromOrigAcct = originalAccountIDs[fromID] ?? 0
             let linkOrigAcct = originalAccountIDs[linkID] ?? 0
@@ -309,7 +360,7 @@ actor MoneyImportService {
     private func resolveTransferLinks() {
         // Group transfer transactions by transferGroupID
         var groups: [String: [Transaction]] = [:]
-        for (_, trn) in transactionsByMoneyID {
+        for (_, trn) in transactionsBySourceID {
             guard trn.isTransfer, let gid = trn.transferGroupID else { continue }
             groups[gid, default: []].append(trn)
         }
@@ -329,18 +380,18 @@ actor MoneyImportService {
     private func importLots(_ rows: [[String: Any]]) {
         for row in rows {
             let lot = Lot(context: context)
-            lot.moneyID = intVal(row["hlot"])
+            lot.sourceID = intVal(row["hlot"])
             lot.quantity = doubleVal(row["qty"])
             lot.buyDate = Date.fromMoneyString(row["dtBuy"] as? String)
             lot.sellDate = Date.fromMoneyString(row["dtSell"] as? String)
 
             let acctID = intVal(row["hacct"])
-            lot.account = accountsByMoneyID[acctID]
+            lot.account = accountsBySourceID[acctID]
 
             let secID = intVal(row["hsec"])
-            lot.security = securitiesByMoneyID[secID]
+            lot.security = securitiesBySourceID[secID]
 
-            lotsByMoneyID[lot.moneyID] = lot
+            lotsBySourceID[lot.sourceID] = lot
         }
     }
 
@@ -359,8 +410,8 @@ actor MoneyImportService {
 
         for item in bgtItems {
             let bi = BudgetCategory(context: context)
-            bi.moneyID = intVal(item["hbgtitm"])
-            bi.moneyBgtID = intVal(item["hbgt"])
+            bi.sourceID = intVal(item["hbgtitm"])
+            bi.sourceBudgetID = intVal(item["hbgt"])
             bi.name = item["szFull"] as? String
             bi.amountPerPeriod = decimalVal(item["amtPerFrq"])
 
@@ -381,7 +432,7 @@ actor MoneyImportService {
             // Link category
             let catID = intVal(item["hcat"])
             if catID > 0 {
-                bi.category = categoriesByMoneyID[catID]
+                bi.category = categoriesBySourceID[catID]
             }
 
             // Bucket name

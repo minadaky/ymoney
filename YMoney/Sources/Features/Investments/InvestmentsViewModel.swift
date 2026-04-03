@@ -122,7 +122,7 @@ final class InvestmentsViewModel {
 
         // Group lots by security + account
         let grouped = Dictionary(grouping: lots) { lot -> String in
-            "\(lot.security?.moneyID ?? 0)-\(lot.account?.moneyID ?? 0)"
+            "\(lot.security?.sourceID ?? 0)-\(lot.account?.sourceID ?? 0)"
         }
 
         var holdings: [Holding] = []

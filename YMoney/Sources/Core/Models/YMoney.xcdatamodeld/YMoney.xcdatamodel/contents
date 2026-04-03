@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="24A335" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="NO" userDefinedModelVersionIdentifier="">
     <entity name="Account" representedClassName="Account" syncable="YES" codeGenerationType="class">
-        <attribute name="accountType" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="cashCompanionMoneyID" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="accountType" optional="YES" attributeType="String" defaultValueString="CHECKING"/>
         <attribute name="currencyID" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="groupType" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="hasCashCompanion" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isClosed" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isFavorite" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <attribute name="openDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="openingBalance" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="financialInstitution" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="FinancialInstitution" inverseName="accounts" inverseEntity="FinancialInstitution"/>
         <relationship name="lots" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Lot" inverseName="account" inverseEntity="Lot"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Transaction" inverseName="account" inverseEntity="Transaction"/>
@@ -31,8 +30,8 @@
         <attribute name="amount9" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="amountPerPeriod" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="bucketName" optional="YES" attributeType="String"/>
-        <attribute name="moneyBgtID" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceBudgetID" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="budgetItems" inverseEntity="Category"/>
     </entity>
@@ -42,7 +41,7 @@
         <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isTaxRelated" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="level" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="budgetItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="BudgetCategory" inverseName="category" inverseEntity="BudgetCategory"/>
         <relationship name="children" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Category" inverseName="parent" inverseEntity="Category"/>
         <relationship name="parent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="children" inverseEntity="Category"/>
@@ -50,12 +49,12 @@
     </entity>
     <entity name="Currency" representedClassName="Currency" syncable="YES" codeGenerationType="class">
         <attribute name="isoCode" optional="YES" attributeType="String"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
     </entity>
     <entity name="FinancialInstitution" representedClassName="FinancialInstitution" syncable="YES" codeGenerationType="class">
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="notes" optional="YES" attributeType="String"/>
         <relationship name="accounts" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Account" inverseName="financialInstitution" inverseEntity="Account"/>
@@ -68,7 +67,7 @@
     </entity>
     <entity name="Lot" representedClassName="Lot" syncable="YES" codeGenerationType="class">
         <attribute name="buyDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="quantity" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="sellDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="lots" inverseEntity="Account"/>
@@ -76,7 +75,7 @@
     </entity>
     <entity name="Payee" representedClassName="Payee" syncable="YES" codeGenerationType="class">
         <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="payee" inverseEntity="Transaction"/>
     </entity>
@@ -85,10 +84,10 @@
         <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="lastPrice" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="lastPriceDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="previousClose" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="securityType" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="securityType" optional="YES" attributeType="String" defaultValueString="OTHER"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
         <relationship name="lots" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Lot" inverseName="security" inverseEntity="Lot"/>
         <relationship name="quotes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="SecurityQuote" inverseName="security" inverseEntity="SecurityQuote"/>
@@ -111,19 +110,19 @@
         <relationship name="security" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Security" inverseName="quotes" inverseEntity="Security"/>
     </entity>
     <entity name="Transaction" representedClassName="Transaction" syncable="YES" codeGenerationType="class">
-        <attribute name="actionType" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="amount" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="checkNumber" optional="YES" attributeType="String"/>
-        <attribute name="clearedStatus" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="clearedStatus" optional="YES" attributeType="String" defaultValueString="uncleared"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="incomeType" optional="YES" attributeType="String"/>
         <attribute name="isCashLeg" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isInternalTransfer" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isTransfer" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="memo" optional="YES" attributeType="String"/>
-        <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sourceID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="sourceType" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="transactionType" optional="YES" attributeType="String" defaultValueString="debit"/>
         <attribute name="transferGroupID" optional="YES" attributeType="String"/>
-        <attribute name="transactionFlags" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <relationship name="account" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Account" inverseName="transactions" inverseEntity="Account"/>
         <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Category" inverseName="transactions" inverseEntity="Category"/>
         <relationship name="investmentDetail" optional="YES" maxCount="1" deletionRule="Cascade" destinationEntity="InvestmentDetail" inverseName="transaction" inverseEntity="InvestmentDetail"/>

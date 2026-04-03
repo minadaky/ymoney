@@ -28,6 +28,8 @@ struct TransactionDetailView: View {
                 }
                 if let category = transaction.category?.fullName {
                     detailRow("Category", value: category, icon: "tag.fill")
+                } else if transaction.investmentDetail != nil {
+                    detailRow("Category", value: transaction.ofxType.displayName(incomeType: transaction.ofxIncomeType), icon: "tag.fill")
                 }
                 if let account = transaction.account?.name {
                     detailRow("Account", value: account, icon: "building.columns.fill")
@@ -100,9 +102,9 @@ struct TransactionDetailView: View {
             }
 
             Section("System") {
-                detailRow("Money ID", value: "\(transaction.moneyID)", icon: "number")
-                detailRow("Action Type", value: actionTypeName(transaction.actionType), icon: "gearshape")
-                detailRow("Cleared", value: clearedStatusName(transaction.clearedStatus), icon: "checkmark.circle")
+                detailRow("Source ID", value: "\(transaction.sourceID)", icon: "number")
+                detailRow("Type", value: transaction.ofxType.displayName(incomeType: transaction.ofxIncomeType), icon: "gearshape")
+                detailRow("Cleared", value: transaction.ofxClearedStatus.displayName, icon: "checkmark.circle")
             }
         }
         .navigationTitle("Transaction")
@@ -147,27 +149,6 @@ struct TransactionDetailView: View {
                 .foregroundStyle(.secondary)
             Spacer()
             Text(value)
-        }
-    }
-
-    private func actionTypeName(_ type: Int32) -> String {
-        switch type {
-        case 0: return "Withdrawal"
-        case 1: return "Buy"
-        case 2: return "Sell"
-        case 3: return "Dividend"
-        case 4: return "Interest"
-        case 5: return "Transfer"
-        default: return "Type \(type)"
-        }
-    }
-
-    private func clearedStatusName(_ status: Int32) -> String {
-        switch status {
-        case 0: return "Uncleared"
-        case 1: return "Cleared"
-        case 2: return "Reconciled"
-        default: return "Unknown"
         }
     }
 }

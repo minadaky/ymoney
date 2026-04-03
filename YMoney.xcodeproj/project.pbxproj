@@ -43,6 +43,7 @@
 		A10034 /* YahooQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20034; };
 		A10035 /* yahoo_quote_transform.js in Resources */ = {isa = PBXBuildFile; fileRef = A20035; };
 		A10036 /* TransactionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20036; };
+		A10037 /* OFXTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20037; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +84,7 @@
 		A20034 /* YahooQuoteProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YahooQuoteProvider.swift; sourceTree = "<group>"; };
 		A20035 /* yahoo_quote_transform.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = yahoo_quote_transform.js; sourceTree = "<group>"; };
 		A20036 /* TransactionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionEditorView.swift; sourceTree = "<group>"; };
+		A20037 /* OFXTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OFXTypes.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -148,6 +150,7 @@
 			isa = PBXGroup;
 			children = (
 				A20004 /* YMoney.xcdatamodeld */,
+				A20037 /* OFXTypes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -395,6 +398,7 @@
 				A10033 /* QuoteConfiguration.swift in Sources */,
 				A10034 /* YahooQuoteProvider.swift in Sources */,
 				A10036 /* TransactionEditorView.swift in Sources */,
+				A10037 /* OFXTypes.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

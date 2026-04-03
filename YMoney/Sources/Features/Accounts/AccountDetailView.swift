@@ -15,7 +15,6 @@ struct AccountDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
 
     @State private var transactions: [Transaction] = []
-    @State private var balance: NSDecimalNumber = .zero
     @State private var searchText = ""
     @State private var isSearching = false
     @State private var filter: TransactionFilter = .all
@@ -25,7 +24,29 @@ struct AccountDetailView: View {
 
     /// Whether this is an investment account with a merged cash companion
     private var isInvestmentAccount: Bool {
-        account.accountType == 5 && account.cashCompanionMoneyID > 0
+        account.ofxAccountType == .investment && account.hasCashCompanion
+    }
+
+    /// Balance computed from the current filter
+    private var balance: NSDecimalNumber {
+        let opening: NSDecimalNumber
+        switch filter {
+        case .all, .cash:
+            opening = account.openingBalance ?? .zero
+        case .investment:
+            opening = .zero
+        }
+        // Sum amounts from the filter-matching transactions (ignoring search text)
+        let filtered: [Transaction]
+        switch filter {
+        case .all:
+            filtered = transactions.filter { !$0.isInternalTransfer }
+        case .investment:
+            filtered = transactions.filter { !$0.isCashLeg && !$0.isInternalTransfer }
+        case .cash:
+            filtered = transactions.filter { $0.isCashLeg && !$0.isInternalTransfer }
+        }
+        return filtered.reduce(opening) { $0.adding($1.amount ?? .zero) }
     }
 
     var body: some View {
@@ -135,12 +156,6 @@ struct AccountDetailView: View {
         let txns = (account.transactions as? Set<Transaction>) ?? []
         transactions = txns.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
 
-        var bal = account.openingBalance ?? .zero
-        for trn in txns {
-            bal = bal.adding(trn.amount ?? .zero)
-        }
-        balance = bal
-
         // Resolve scroll target from transferGroupID
         if let gid = scrollToTransferGroupID {
             let match = transactions.first { $0.transferGroupID == gid }
@@ -195,7 +210,7 @@ struct AccountDetailView: View {
     private func transactionIcon(_ trn: Transaction) -> some View {
         Group {
             if trn.investmentDetail != nil {
-                Image(systemName: investmentIcon(trn.actionType))
+                Image(systemName: investmentIcon(trn.transactionType))
                     .foregroundStyle(.purple)
             } else if trn.isTransfer {
                 Image(systemName: "arrow.left.arrow.right")
@@ -215,7 +230,7 @@ struct AccountDetailView: View {
 
     private func transactionTitle(_ trn: Transaction) -> String {
         if let detail = trn.investmentDetail, detail.quantity != 0 {
-            let action = investmentActionName(trn.actionType)
+            let action = investmentActionName(trn.transactionType)
             let secName = trn.security?.symbol ?? trn.security?.name ?? ""
             return "\(action) \(secName)"
         }
@@ -226,23 +241,22 @@ struct AccountDetailView: View {
         return trn.payee?.name ?? trn.category?.fullName ?? "Transaction"
     }
 
-    private func investmentIcon(_ actionType: Int32) -> String {
-        switch actionType {
-        case 1: return "arrow.down.circle.fill"
-        case 2: return "arrow.up.circle.fill"
-        case 3: return "banknote.fill"
-        case 4: return "percent"
+    private func investmentIcon(_ type: String?) -> String {
+        switch type {
+        case "buy": return "arrow.down.circle.fill"
+        case "sell": return "arrow.up.circle.fill"
+        case "income": return "banknote.fill"
+        case "reinvest": return "arrow.triangle.2.circlepath"
         default: return "chart.line.uptrend.xyaxis"
         }
     }
 
-    private func investmentActionName(_ type: Int32) -> String {
+    private func investmentActionName(_ type: String?) -> String {
         switch type {
-        case 1: return "Buy"
-        case 2: return "Sell"
-        case 3: return "Dividend"
-        case 4: return "Interest"
-        case 12: return "Reinvest"
+        case "buy": return "Buy"
+        case "sell": return "Sell"
+        case "income": return "Dividend"
+        case "reinvest": return "Reinvest"
         default: return "Trade"
         }
     }
