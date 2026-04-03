@@ -34,17 +34,19 @@ struct InvestmentsView: View {
                             holdingRow(holding)
                         }
                         .swipeActions(edge: .leading) {
-                            Button {
-                                Task { await vm.fetchQuote(for: holding) }
-                            } label: {
-                                if vm.fetchingSymbols.contains(holding.symbol) {
-                                    Label("Fetching…", systemImage: "arrow.trianglehead.2.clockwise")
-                                } else {
-                                    Label("Quote", systemImage: "chart.line.uptrend.xyaxis")
+                            if QuoteConfiguration.quotesEnabled {
+                                Button {
+                                    Task { await vm.fetchQuote(for: holding) }
+                                } label: {
+                                    if vm.fetchingSymbols.contains(holding.symbol) {
+                                        Label("Fetching…", systemImage: "arrow.trianglehead.2.clockwise")
+                                    } else {
+                                        Label("Quote", systemImage: "chart.line.uptrend.xyaxis")
+                                    }
                                 }
+                                .tint(.blue)
+                                .disabled(vm.fetchingSymbols.contains(holding.symbol))
                             }
-                            .tint(.blue)
-                            .disabled(vm.fetchingSymbols.contains(holding.symbol))
                         }
                     }
                 }

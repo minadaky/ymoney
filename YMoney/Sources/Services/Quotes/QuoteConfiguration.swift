@@ -9,6 +9,17 @@ enum QuoteConfiguration {
 
     private static let jsOverrideKey = "yahooQuoteJSOverride"
     private static let jsOverrideURLKey = "yahooQuoteJSOverrideURL"
+    private static let quotesEnabledKey = "quotesEnabled"
+
+    /// Master switch for the quotes feature.
+    static var quotesEnabled: Bool {
+        get {
+            // Default to true if never set
+            if UserDefaults.standard.object(forKey: quotesEnabledKey) == nil { return true }
+            return UserDefaults.standard.bool(forKey: quotesEnabledKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: quotesEnabledKey) }
+    }
 
     /// A cached JS override stored in UserDefaults (populated from the remote URL).
     static var jsOverride: String? {

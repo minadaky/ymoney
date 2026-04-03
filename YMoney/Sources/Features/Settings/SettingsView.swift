@@ -3,6 +3,7 @@ import SwiftUI
 /// App settings
 struct SettingsView: View {
     @State private var hasImported = UserDefaults.standard.bool(forKey: "hasImportedData")
+    @State private var quotesEnabled = QuoteConfiguration.quotesEnabled
     @State private var quoteTestStatus: QuoteTest = .idle
     @State private var overrideURL = QuoteConfiguration.jsOverrideURL ?? ""
     @State private var overrideStatus: OverrideStatus = .idle
@@ -18,45 +19,55 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section("Quotes") {
-                HStack {
-                    Label("Data Source", systemImage: "chart.line.uptrend.xyaxis")
-                    Spacer()
-                    Text("Yahoo Finance")
-                        .foregroundStyle(.secondary)
+                Toggle(isOn: $quotesEnabled) {
+                    Label("Enable Quotes", systemImage: "chart.line.uptrend.xyaxis")
+                }
+                .onChange(of: quotesEnabled) {
+                    QuoteConfiguration.quotesEnabled = quotesEnabled
                 }
 
-                Button {
-                    Task { await testQuote() }
-                } label: {
+                if quotesEnabled {
                     HStack {
-                        Label("Test Connection", systemImage: "antenna.radiowaves.left.and.right")
+                        Label("Data Source", systemImage: "globe")
                         Spacer()
-                        switch quoteTestStatus {
-                        case .idle:
-                            EmptyView()
-                        case .checking:
-                            ProgressView()
-                                .controlSize(.small)
-                        case .valid(let price):
-                            Text("AAPL \(price)")
-                                .font(.caption)
-                                .foregroundStyle(.green)
-                        case .invalid(let msg):
-                            Text(msg)
-                                .font(.caption)
-                                .foregroundStyle(.red)
-                                .lineLimit(1)
+                        Text("Yahoo Finance")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button {
+                        Task { await testQuote() }
+                    } label: {
+                        HStack {
+                            Label("Test Connection", systemImage: "antenna.radiowaves.left.and.right")
+                            Spacer()
+                            switch quoteTestStatus {
+                            case .idle:
+                                EmptyView()
+                            case .checking:
+                                ProgressView()
+                                    .controlSize(.small)
+                            case .valid(let price):
+                                Text("AAPL \(price)")
+                                    .font(.caption)
+                                    .foregroundStyle(.green)
+                            case .invalid(let msg):
+                                Text(msg)
+                                    .font(.caption)
+                                    .foregroundStyle(.red)
+                                    .lineLimit(1)
+                            }
                         }
                     }
-                }
-                .disabled(quoteTestStatus == .checking)
+                    .disabled(quoteTestStatus == .checking)
 
-                Text("No API key required. Swipe right on a holding to fetch its price.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    Text("No API key required. Swipe right on a holding to fetch its price.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
-            Section("JS Transform Override") {
+            if quotesEnabled {
+                Section("JS Transform Override") {
                 HStack {
                     Label("URL", systemImage: "link")
                     Spacer()
@@ -114,6 +125,7 @@ struct SettingsView: View {
                 Text("Optional. Point to a hosted JS file to hot-fix the Yahoo parser without an app update. Checked on each launch.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
             }
 
             Section("Data") {

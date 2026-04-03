@@ -63,11 +63,36 @@ final class InvestmentsViewModel {
             let provider = QuoteConfiguration.makeProvider()
             let quote = try await provider.quote(for: symbol)
 
-            // Persist on the Security entity
+            // Persist on the Security entity (denormalized for fast display)
             guard let security = context.object(with: holding.securityObjectID) as? Security else { return }
             security.lastPrice = quote.currentPrice
             security.previousClose = quote.previousClose
             security.lastPriceDate = quote.timestamp
+
+            // Append to quote history (one record per fetch, deduped by calendar day)
+            let calendar = Calendar.current
+            let quoteDay = calendar.startOfDay(for: quote.timestamp)
+            guard let nextDay = calendar.date(byAdding: .day, value: 1, to: quoteDay) else { return }
+            let request = SecurityQuote.fetchRequest()
+            request.predicate = NSPredicate(
+                format: "security == %@ AND date >= %@ AND date < %@",
+                security,
+                quoteDay as NSDate,
+                nextDay as NSDate
+            )
+            request.fetchLimit = 1
+
+            let existing = (try? context.fetch(request))?.first
+
+            let record = existing ?? SecurityQuote(context: context)
+            record.security = security
+            record.date = quote.timestamp
+            record.price = quote.currentPrice
+            record.previousClose = quote.previousClose
+            record.dayHigh = quote.dayHigh
+            record.dayLow = quote.dayLow
+            record.openPrice = quote.openPrice
+
             try context.save()
 
             // Reload holdings to pick up new prices
