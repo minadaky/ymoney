@@ -17,6 +17,7 @@ struct AccountDetailView: View {
     @State private var transactions: [Transaction] = []
     @State private var balance: NSDecimalNumber = .zero
     @State private var searchText = ""
+    @State private var isSearching = false
     @State private var filter: TransactionFilter = .all
     @State private var scrollTarget: NSManagedObjectID?
 
@@ -71,7 +72,7 @@ struct AccountDetailView: View {
                         )
                     }
                 }
-                .searchable(text: $searchText, prompt: "Search transactions")
+                .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search transactions")
                 .onChange(of: scrollTarget) { _, target in
                     if let target {
                         withAnimation {

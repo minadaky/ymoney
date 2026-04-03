@@ -6,6 +6,7 @@ struct TransactionsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var viewModel: TransactionsViewModel?
     @State private var searchText = ""
+    @State private var isSearching = false
     @State private var showAddTransaction = false
 
     var body: some View {
@@ -78,7 +79,7 @@ struct TransactionsView: View {
         .searchable(text: Binding(
             get: { vm.searchText },
             set: { vm.searchText = $0 }
-        ), prompt: "Search payee, category, memo")
+        ), isPresented: $isSearching, prompt: "Search payee, category, memo")
     }
 
     private func transactionRow(_ trn: Transaction) -> some View {

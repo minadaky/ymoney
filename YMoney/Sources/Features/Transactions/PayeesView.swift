@@ -6,6 +6,7 @@ struct PayeesView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var payees: [Payee] = []
     @State private var searchText = ""
+    @State private var isSearching = false
 
     var body: some View {
         List {
@@ -29,7 +30,7 @@ struct PayeesView: View {
                 }
             }
         }
-        .searchable(text: $searchText, prompt: "Search payees")
+        .searchable(text: $searchText, isPresented: $isSearching, prompt: "Search payees")
         .navigationTitle("Payees")
         .onAppear { loadPayees() }
     }
