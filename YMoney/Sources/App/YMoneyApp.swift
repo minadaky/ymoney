@@ -9,6 +9,7 @@ struct YMoneyApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .task { await QuoteConfiguration.refreshJSOverride() }
         }
     }
 }

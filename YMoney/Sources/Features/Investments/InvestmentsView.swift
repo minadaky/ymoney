@@ -33,7 +33,40 @@ struct InvestmentsView: View {
                         } label: {
                             holdingRow(holding)
                         }
+                        .swipeActions(edge: .leading) {
+                            if QuoteConfiguration.quotesEnabled {
+                                Button {
+                                    Task { await vm.fetchQuote(for: holding) }
+                                } label: {
+                                    if vm.fetchingSymbols.contains(holding.symbol) {
+                                        Label("Fetching…", systemImage: "arrow.trianglehead.2.clockwise")
+                                    } else {
+                                        Label("Quote", systemImage: "chart.line.uptrend.xyaxis")
+                                    }
+                                }
+                                .tint(.blue)
+                                .disabled(vm.fetchingSymbols.contains(holding.symbol))
+                            }
+                        }
                     }
+                }
+            }
+
+            if let error = vm.fetchError {
+                Section {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .onTapGesture {
+                            UIPasteboard.general.string = vm.fetchErrorDiagnostic ?? error
+                            let saved = vm.fetchErrorDiagnostic
+                            vm.fetchError = "Copied to clipboard ✓"
+                            vm.fetchErrorDiagnostic = saved
+                            Task {
+                                try? await Task.sleep(for: .seconds(2))
+                                await MainActor.run { vm.fetchError = nil }
+                            }
+                        }
                 }
             }
 
@@ -91,11 +124,27 @@ struct InvestmentsView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(String(format: "%.2f shares", holding.totalShares))
-                    .font(.subheadline.monospacedDigit())
-                Text("\(holding.openLots.count) open lot\(holding.openLots.count == 1 ? "" : "s")")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if holding.lastPrice > 0 {
+                    Text(CurrencyFormatter.format(NSDecimalNumber(value: holding.lastPrice)))
+                        .font(.subheadline.monospacedDigit().bold())
+                    if holding.previousClose > 0 {
+                        let change = holding.lastPrice - holding.previousClose
+                        let pct = (change / holding.previousClose) * 100
+                        HStack(spacing: 2) {
+                            Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                                .imageScale(.small)
+                            Text(String(format: "%+.2f (%.1f%%)", change, pct))
+                        }
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(change >= 0 ? .green : .red)
+                    }
+                } else {
+                    Text(String(format: "%.2f shares", holding.totalShares))
+                        .font(.subheadline.monospacedDigit())
+                    Text("\(holding.openLots.count) open lot\(holding.openLots.count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(.vertical, 2)

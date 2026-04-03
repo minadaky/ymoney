@@ -83,12 +83,32 @@
     <entity name="Security" representedClassName="Security" syncable="YES" codeGenerationType="class">
         <attribute name="exchange" optional="YES" attributeType="String"/>
         <attribute name="isHidden" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastPrice" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="lastPriceDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="moneyID" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
+        <attribute name="previousClose" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="securityType" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="symbol" optional="YES" attributeType="String"/>
         <relationship name="lots" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Lot" inverseName="security" inverseEntity="Lot"/>
+        <relationship name="quotes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="SecurityQuote" inverseName="security" inverseEntity="SecurityQuote"/>
         <relationship name="transactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Transaction" inverseName="security" inverseEntity="Transaction"/>
+    </entity>
+    <entity name="SecurityQuote" representedClassName="SecurityQuote" syncable="YES" codeGenerationType="class">
+        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dayHigh" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="dayLow" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="openPrice" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="previousClose" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="price" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <fetchIndex name="byDate">
+            <fetchIndexElement property="date" type="Binary" order="descending"/>
+        </fetchIndex>
+        <fetchIndex name="bySecurityDate">
+            <fetchIndexElement property="security" type="Binary" order="ascending"/>
+            <fetchIndexElement property="date" type="Binary" order="descending"/>
+        </fetchIndex>
+        <relationship name="security" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Security" inverseName="quotes" inverseEntity="Security"/>
     </entity>
     <entity name="Transaction" representedClassName="Transaction" syncable="YES" codeGenerationType="class">
         <attribute name="actionType" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
