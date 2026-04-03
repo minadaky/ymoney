@@ -263,6 +263,7 @@ struct TransactionEditorView: View {
         trn.isTransfer = false
         trn.transferGroupID = nil
         trn.linkedAccount = nil
+        trn.transactionType = (kind == .expense ? OFXTransactionType.debit : OFXTransactionType.credit).rawValue
 
         resolvePayee(for: trn)
 
@@ -293,6 +294,7 @@ struct TransactionEditorView: View {
         outflow.linkedAccount = to
         outflow.isTransfer = true
         outflow.transferGroupID = groupID
+        outflow.transactionType = OFXTransactionType.xfer.rawValue
         outflow.memo = memo.isEmpty ? nil : memo
         outflow.clearedStatus = clearedStatus
         outflow.sourceType = TransactionSourceType.manual.rawValue
@@ -305,6 +307,7 @@ struct TransactionEditorView: View {
         inflow.linkedAccount = from
         inflow.isTransfer = true
         inflow.transferGroupID = groupID
+        inflow.transactionType = OFXTransactionType.xfer.rawValue
         inflow.memo = memo.isEmpty ? nil : memo
         inflow.clearedStatus = clearedStatus
         inflow.sourceType = TransactionSourceType.manual.rawValue

@@ -118,11 +118,7 @@ actor OFXImportService {
             trn.sourceType = TransactionSourceType.ofxImport.rawValue
             trn.isCashLeg = isCashLeg
             trn.account = account
-
-            // Store FITID as sourceID for dedup
-            if let fitIDInt = Int32(ofxTrn.fitID) {
-                trn.sourceID = fitIDInt
-            }
+            trn.fitID = ofxTrn.fitID
 
             // Handle transfer detection
             if ofxTrn.type == "XFER" {
@@ -161,10 +157,7 @@ actor OFXImportService {
             trn.clearedStatus = ClearedStatus.cleared.rawValue
             trn.sourceType = TransactionSourceType.ofxImport.rawValue
             trn.account = account
-
-            if let fitIDInt = Int32(ofxInv.fitID) {
-                trn.sourceID = fitIDInt
-            }
+            trn.fitID = ofxInv.fitID
 
             // Map investment type
             let mapped = mapInvestmentType(ofxInv.type)
@@ -200,13 +193,13 @@ actor OFXImportService {
 
     // MARK: - Deduplication
 
-    /// Fetch all FITIDs already in the account (from sourceID and transferGroupID)
+    /// Fetch all FITIDs already in the account
     private func fetchExistingFITIDs(for account: Account) -> Set<String> {
         let transactions = (account.transactions as? Set<Transaction>) ?? []
         var fitIDs = Set<String>()
         for trn in transactions {
-            if trn.sourceID != 0 {
-                fitIDs.insert(String(trn.sourceID))
+            if let fid = trn.fitID, !fid.isEmpty {
+                fitIDs.insert(fid)
             }
         }
         return fitIDs

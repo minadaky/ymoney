@@ -168,7 +168,7 @@ final class OFXExportService {
                 xml += """
                 <BUYSTOCK>
                 <INVBUY>
-                <INVTRAN><FITID>\(trn.sourceID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
                 <UNITS>\(detail.quantity)</UNITS>
                 <UNITPRICE>\(detail.price)</UNITPRICE>
@@ -185,7 +185,7 @@ final class OFXExportService {
                 xml += """
                 <SELLSTOCK>
                 <INVSELL>
-                <INVTRAN><FITID>\(trn.sourceID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
                 <UNITS>\(detail.quantity)</UNITS>
                 <UNITPRICE>\(detail.price)</UNITPRICE>
@@ -202,7 +202,7 @@ final class OFXExportService {
                 let incomeType = (trn.incomeType ?? "div").uppercased()
                 xml += """
                 <INCOME>
-                <INVTRAN><FITID>\(trn.sourceID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
                 <INCOMETYPE>\(incomeType)</INCOMETYPE>
                 <TOTAL>\(trn.amount?.stringValue ?? "0")</TOTAL>
@@ -216,7 +216,7 @@ final class OFXExportService {
                 let incomeType = (trn.incomeType ?? "div").uppercased()
                 xml += """
                 <REINVEST>
-                <INVTRAN><FITID>\(trn.sourceID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
                 <INCOMETYPE>\(incomeType)</INCOMETYPE>
                 <UNITS>\(detail.quantity)</UNITS>
@@ -255,7 +255,7 @@ final class OFXExportService {
         <TRNTYPE>\(trnType)</TRNTYPE>
         <DTPOSTED>\(date)</DTPOSTED>
         <TRNAMT>\(amount.stringValue)</TRNAMT>
-        <FITID>\(trn.sourceID)</FITID>
+        <FITID>\(trn.fitID ?? String(trn.sourceID))</FITID>
         <NAME>\(escapeXML(name))</NAME>
         \(trn.memo != nil ? "<MEMO>\(escapeXML(trn.memo!))</MEMO>" : "")
         \(trn.checkNumber != nil ? "<CHECKNUM>\(escapeXML(trn.checkNumber!))</CHECKNUM>" : "")

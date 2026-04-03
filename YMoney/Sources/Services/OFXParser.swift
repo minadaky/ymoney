@@ -133,6 +133,13 @@ final class OFXParser {
                                 result += "</\(tagName)>"
                                 i = valueEnd
                                 continue
+                            } else {
+                                // Value extends to end of input
+                                let value = String(trimmed).trimmingCharacters(in: .whitespaces)
+                                result += value
+                                result += "</\(tagName)>"
+                                i = input.endIndex
+                                continue
                             }
                         }
                     }

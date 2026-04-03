@@ -114,6 +114,7 @@
         <attribute name="checkNumber" optional="YES" attributeType="String"/>
         <attribute name="clearedStatus" optional="YES" attributeType="String" defaultValueString="uncleared"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="fitID" optional="YES" attributeType="String"/>
         <attribute name="incomeType" optional="YES" attributeType="String"/>
         <attribute name="isCashLeg" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="isInternalTransfer" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
