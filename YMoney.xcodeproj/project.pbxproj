@@ -37,6 +37,11 @@
 		A10028 /* InvestmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20028; };
 		A10029 /* PayeesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20029; };
 		A10030 /* SpendingChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20030; };
+		A10031 /* QuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20031; };
+		A10032 /* FinnhubQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20032; };
+		A10033 /* QuoteConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20033; };
+		A10034 /* YahooQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20034; };
+		A10035 /* yahoo_quote_transform.js in Resources */ = {isa = PBXBuildFile; fileRef = A20035; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +76,11 @@
 		A20028 /* InvestmentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InvestmentDetailView.swift; sourceTree = "<group>"; };
 		A20029 /* PayeesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayeesView.swift; sourceTree = "<group>"; };
 		A20030 /* SpendingChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingChartView.swift; sourceTree = "<group>"; };
+		A20031 /* QuoteProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteProvider.swift; sourceTree = "<group>"; };
+		A20032 /* FinnhubQuoteProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinnhubQuoteProvider.swift; sourceTree = "<group>"; };
+		A20033 /* QuoteConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteConfiguration.swift; sourceTree = "<group>"; };
+		A20034 /* YahooQuoteProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YahooQuoteProvider.swift; sourceTree = "<group>"; };
+		A20035 /* yahoo_quote_transform.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = yahoo_quote_transform.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -162,8 +172,20 @@
 			children = (
 				A20006 /* MoneyImportService.swift */,
 				A20015 /* OFXExportService.swift */,
+				A50021 /* Quotes */,
 			);
 			path = Sources/Services;
+			sourceTree = "<group>";
+		};
+		A50021 /* Quotes */ = {
+			isa = PBXGroup;
+			children = (
+				A20031 /* QuoteProvider.swift */,
+				A20032 /* FinnhubQuoteProvider.swift */,
+				A20034 /* YahooQuoteProvider.swift */,
+				A20033 /* QuoteConfiguration.swift */,
+			);
+			path = Quotes;
 			sourceTree = "<group>";
 		};
 		A50011 /* Features */ = {
@@ -261,6 +283,7 @@
 			isa = PBXGroup;
 			children = (
 				A20016 /* codekind_export.json */,
+				A20035 /* yahoo_quote_transform.js */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -325,6 +348,7 @@
 			files = (
 				A10003 /* Assets.xcassets in Resources */,
 				A10016 /* codekind_export.json in Resources */,
+				A10035 /* yahoo_quote_transform.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,6 +387,10 @@
 				A10028 /* InvestmentDetailView.swift in Sources */,
 				A10029 /* PayeesView.swift in Sources */,
 				A10030 /* SpendingChartView.swift in Sources */,
+				A10031 /* QuoteProvider.swift in Sources */,
+				A10032 /* FinnhubQuoteProvider.swift in Sources */,
+				A10033 /* QuoteConfiguration.swift in Sources */,
+				A10034 /* YahooQuoteProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
