@@ -1,0 +1,10 @@
+{
+    "repo_path": "/Users/yanni/code/ymoney/.worktrees/money-",
+    "scheme": "YMoney",
+    "project": "YMoney.xcodeproj",
+    "api_key_id": "HMJML9G967",
+    "api_issuer": "ed1c4be0-e08c-444f-91a4-88a8dc523cf9",
+    "api_key_path": "/Users/yanni/code/ymoney/.worktrees/money-/private_keys/AuthKey_HMJML9G967.p8",
+    "team_id": "8GH9H6DFKZ",
+    "bump_build": true
+}
