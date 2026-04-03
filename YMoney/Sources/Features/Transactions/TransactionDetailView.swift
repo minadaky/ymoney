@@ -44,7 +44,10 @@ struct TransactionDetailView: View {
                             .foregroundStyle(.secondary)
                     } else if let linkedAcct = transaction.linkedAccount {
                         NavigationLink {
-                            AccountDetailView(account: linkedAcct)
+                            AccountDetailView(
+                                account: linkedAcct,
+                                scrollToTransferGroupID: transaction.transferGroupID
+                            )
                         } label: {
                             HStack {
                                 Image(systemName: "arrow.left.arrow.right")

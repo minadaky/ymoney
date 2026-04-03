@@ -11,12 +11,14 @@ enum TransactionFilter: String, CaseIterable {
 /// Account detail view showing transaction register
 struct AccountDetailView: View {
     let account: Account
+    var scrollToTransferGroupID: String? = nil
     @Environment(\.managedObjectContext) private var viewContext
 
     @State private var transactions: [Transaction] = []
     @State private var balance: NSDecimalNumber = .zero
     @State private var searchText = ""
     @State private var filter: TransactionFilter = .all
+    @State private var scrollTarget: NSManagedObjectID?
 
     @State private var showAddTransaction = false
 
@@ -53,16 +55,31 @@ struct AccountDetailView: View {
             }
 
             // Transaction register
-            List {
-                ForEach(filteredTransactions, id: \.objectID) { trn in
-                    NavigationLink {
-                        TransactionDetailView(transaction: trn)
-                    } label: {
-                        transactionRow(trn)
+            ScrollViewReader { proxy in
+                List {
+                    ForEach(filteredTransactions, id: \.objectID) { trn in
+                        NavigationLink {
+                            TransactionDetailView(transaction: trn)
+                        } label: {
+                            transactionRow(trn)
+                        }
+                        .id(trn.objectID)
+                        .listRowBackground(
+                            trn.objectID == scrollTarget
+                                ? Color.blue.opacity(0.15)
+                                : Color.clear
+                        )
+                    }
+                }
+                .searchable(text: $searchText, prompt: "Search transactions")
+                .onChange(of: scrollTarget) { _, target in
+                    if let target {
+                        withAnimation {
+                            proxy.scrollTo(target, anchor: .center)
+                        }
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search transactions")
         }
         .navigationTitle(account.name ?? "Account")
         .toolbar {
@@ -120,6 +137,12 @@ struct AccountDetailView: View {
             bal = bal.adding(trn.amount ?? .zero)
         }
         balance = bal
+
+        // Resolve scroll target from transferGroupID
+        if let gid = scrollToTransferGroupID {
+            let match = transactions.first { $0.transferGroupID == gid }
+            scrollTarget = match?.objectID
+        }
     }
 
     private func transactionRow(_ trn: Transaction) -> some View {
