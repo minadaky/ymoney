@@ -6,6 +6,8 @@ struct TransactionsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State private var viewModel: TransactionsViewModel?
     @State private var searchText = ""
+    @State private var isSearching = false
+    @State private var showAddTransaction = false
 
     var body: some View {
         Group {
@@ -16,10 +18,25 @@ struct TransactionsView: View {
             }
         }
         .navigationTitle("Transactions")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showAddTransaction = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showAddTransaction) {
+            TransactionEditorView(transaction: nil, preselectedAccount: nil)
+        }
         .onAppear {
             let vm = TransactionsViewModel(context: viewContext)
             vm.load()
             viewModel = vm
+        }
+        .onChange(of: showAddTransaction) { _, isPresented in
+            if !isPresented { viewModel?.load() }
         }
     }
 
@@ -62,7 +79,7 @@ struct TransactionsView: View {
         .searchable(text: Binding(
             get: { vm.searchText },
             set: { vm.searchText = $0 }
-        ), prompt: "Search payee, category, memo")
+        ), isPresented: $isSearching, placement: .navigationBarDrawer(displayMode: .automatic), prompt: "Search payee, category, memo")
     }
 
     private func transactionRow(_ trn: Transaction) -> some View {

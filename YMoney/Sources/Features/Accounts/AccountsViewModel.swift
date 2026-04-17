@@ -25,24 +25,15 @@ final class AccountsViewModel {
 
         guard let accounts = try? context.fetch(request) else { return }
 
-        let investmentTypes: Set<Int32> = [5]
-        let creditTypes: Set<Int32> = [1]
-        let bankingTypes: Set<Int32> = [0, 2, 3, 4] // checking, savings, cash, money market
-        let retirementTypes: Set<Int32> = [10, 11]   // 401k, IRA
-        let loanTypes: Set<Int32> = [9]
-
         let open = accounts.filter { !$0.isClosed }
-        bankingAccounts = open.filter { bankingTypes.contains($0.accountType) }
-        creditAccounts = open.filter { creditTypes.contains($0.accountType) }
-        investmentAccounts = open.filter { investmentTypes.contains($0.accountType) }
-        retirementAccounts = open.filter { retirementTypes.contains($0.accountType) }
-        loanAccounts = open.filter { loanTypes.contains($0.accountType) }
+        bankingAccounts = open.filter { $0.ofxAccountType.isBanking }
+        creditAccounts = open.filter { $0.ofxAccountType == .creditCard }
+        investmentAccounts = open.filter { $0.ofxAccountType == .investment }
+        retirementAccounts = open.filter { $0.ofxAccountType == .retirement401k || $0.ofxAccountType == .ira }
+        loanAccounts = open.filter { $0.ofxAccountType == .loan }
         otherAccounts = open.filter {
-            !bankingTypes.contains($0.accountType) &&
-            !creditTypes.contains($0.accountType) &&
-            !investmentTypes.contains($0.accountType) &&
-            !retirementTypes.contains($0.accountType) &&
-            !loanTypes.contains($0.accountType)
+            !$0.ofxAccountType.isBanking && !$0.ofxAccountType.isDebt && !$0.ofxAccountType.isInvestment &&
+            $0.ofxAccountType != .retirement401k && $0.ofxAccountType != .ira && $0.ofxAccountType != .loan
         }
         closedAccounts = accounts.filter { $0.isClosed }
     }
@@ -54,23 +45,5 @@ final class AccountsViewModel {
             balance = balance.adding(trn.amount ?? .zero)
         }
         return balance
-    }
-
-    func accountTypeName(_ type: Int32) -> String {
-        switch type {
-        case 0: return "Checking"
-        case 1: return "Credit Card"
-        case 2: return "Savings"
-        case 3: return "Cash"
-        case 4: return "Money Market"
-        case 5: return "Investment"
-        case 6: return "Asset"
-        case 7: return "Liability"
-        case 8: return "CD"
-        case 9: return "Loan"
-        case 10: return "401(k)"
-        case 11: return "IRA"
-        default: return "Other"
-        }
     }
 }

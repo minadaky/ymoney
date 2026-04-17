@@ -56,14 +56,14 @@ struct AccountsView: View {
 
     private func accountRow(_ account: Account, vm: AccountsViewModel) -> some View {
         HStack {
-            Image(systemName: iconForType(account.accountType))
-                .foregroundStyle(colorForType(account.accountType))
+            Image(systemName: account.ofxAccountType.icon)
+                .foregroundStyle(accountColor(for: account))
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(account.name ?? "Unknown")
                     .font(.body)
-                Text(vm.accountTypeName(account.accountType))
+                Text(account.ofxAccountType.displayName)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -78,39 +78,19 @@ struct AccountsView: View {
         .padding(.vertical, 4)
     }
 
-    private func iconForType(_ type: Int32) -> String {
-        switch type {
-        case 0: return "building.columns.fill"    // Checking
-        case 1: return "creditcard.fill"           // Credit Card
-        case 2: return "banknote.fill"             // Savings
-        case 3: return "dollarsign.circle.fill"    // Cash
-        case 4: return "building.fill"             // Money Market
-        case 5: return "chart.line.uptrend.xyaxis" // Investment
-        case 6: return "house.fill"                // Asset
-        case 7: return "minus.circle.fill"         // Liability
-        case 8: return "lock.fill"                 // CD
-        case 9: return "percent"                   // Loan
-        case 10: return "briefcase.fill"           // 401(k)
-        case 11: return "heart.fill"               // IRA
-        default: return "questionmark.circle"
-        }
-    }
-
-    private func colorForType(_ type: Int32) -> Color {
-        switch type {
-        case 0: return .blue       // Checking
-        case 1: return .orange     // Credit Card
-        case 2: return .teal       // Savings
-        case 3: return .green      // Cash
-        case 4: return .cyan       // Money Market
-        case 5: return .purple     // Investment
-        case 6: return .brown      // Asset
-        case 7: return .pink       // Liability
-        case 8: return .indigo     // CD
-        case 9: return .red        // Loan
-        case 10: return .mint      // 401(k)
-        case 11: return .mint      // IRA
-        default: return .gray
+    private func accountColor(for account: Account) -> Color {
+        switch account.ofxAccountType {
+        case .checking:       return .blue
+        case .savings:        return .teal
+        case .creditCard:     return .orange
+        case .cash:           return .green
+        case .moneyMarket:    return .cyan
+        case .investment:     return .purple
+        case .asset:          return .brown
+        case .liability:      return .pink
+        case .cd:             return .indigo
+        case .loan:           return .red
+        case .retirement401k, .ira: return .mint
         }
     }
 }

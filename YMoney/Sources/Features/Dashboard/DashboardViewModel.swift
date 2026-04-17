@@ -7,7 +7,7 @@ import CoreData
 final class DashboardViewModel {
     var totalBalance: NSDecimalNumber = .zero
     var bankingBalance: NSDecimalNumber = .zero
-    var creditBalance: NSDecimalNumber = .zero
+    var debtBalance: NSDecimalNumber = .zero
     var investmentBalance: NSDecimalNumber = .zero
     var recentTransactions: [Transaction] = []
     var accounts: [Account] = []
@@ -27,13 +27,13 @@ final class DashboardViewModel {
     private func loadAccounts() {
         let request = Account.fetchRequest()
         request.predicate = NSPredicate(format: "isClosed == NO")
-        request.sortDescriptors = [NSSortDescriptor(key: "accountType", ascending: true)]
+        request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
         guard let accounts = try? context.fetch(request) else { return }
 
         var total = NSDecimalNumber.zero
         var banking = NSDecimalNumber.zero
-        var credit = NSDecimalNumber.zero
+        var debt = NSDecimalNumber.zero
         var investment = NSDecimalNumber.zero
         var balances: [NSManagedObjectID: NSDecimalNumber] = [:]
 
@@ -42,10 +42,12 @@ final class DashboardViewModel {
             balances[account.objectID] = balance
             total = total.adding(balance)
 
-            switch account.accountType {
-            case 1:  credit = credit.adding(balance)       // Credit Card
-            case 5:  investment = investment.adding(balance) // Investment
-            default: banking = banking.adding(balance)      // Everything else
+            if account.ofxAccountType.isDebt {
+                debt = debt.adding(balance)
+            } else if account.ofxAccountType.isInvestment {
+                investment = investment.adding(balance)
+            } else {
+                banking = banking.adding(balance)
             }
         }
 
@@ -53,7 +55,7 @@ final class DashboardViewModel {
         self.accountBalances = balances
         totalBalance = total
         bankingBalance = banking
-        creditBalance = credit
+        debtBalance = debt
         investmentBalance = investment
     }
 

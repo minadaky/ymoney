@@ -7,49 +7,51 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A10001 /* YMoneyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001; };
-		A10002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20002; };
-		A10003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20003; };
-		A10004 /* YMoney.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A20004; };
-		A10005 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20005; };
-		A10006 /* MoneyImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20006; };
-		A10007 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20007; };
-		A10008 /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20008; };
-		A10009 /* AccountDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20009; };
-		A10010 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20010; };
-		A10011 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20011; };
-		A10012 /* InvestmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20012; };
-		A10013 /* BudgetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20013; };
-		A10014 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20014; };
-		A10015 /* OFXExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20015; };
-		A10016 /* codekind_export.json in Resources */ = {isa = PBXBuildFile; fileRef = A20016; };
-		A10017 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20017; };
-		A10018 /* AccountsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20018; };
-		A10019 /* TransactionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20019; };
-		A10020 /* InvestmentsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20020; };
-		A10021 /* BudgetsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20021; };
-		A10022 /* ReportsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20022; };
-		A10023 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20023; };
-		A10024 /* DateExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20024; };
-		A10025 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20025; };
-		A10026 /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20026; };
-		A10027 /* CategoryPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20027; };
-		A10028 /* InvestmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20028; };
-		A10029 /* PayeesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20029; };
-		A10030 /* SpendingChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20030; };
-		A10031 /* QuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20031; };
-		A10032 /* FinnhubQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20032; };
-		A10033 /* QuoteConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20033; };
-		A10034 /* YahooQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20034; };
-		A10035 /* yahoo_quote_transform.js in Resources */ = {isa = PBXBuildFile; fileRef = A20035; };
+		A10001 /* YMoneyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001 /* YMoneyApp.swift */; };
+		A10002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20002 /* ContentView.swift */; };
+		A10003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20003 /* Assets.xcassets */; };
+		A10004 /* YMoney.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A20004 /* YMoney.xcdatamodeld */; };
+		A10005 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20005 /* PersistenceController.swift */; };
+		A10006 /* MoneyImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20006 /* MoneyImportService.swift */; };
+		A10007 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20007 /* DashboardView.swift */; };
+		A10008 /* AccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20008 /* AccountsView.swift */; };
+		A10009 /* AccountDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20009 /* AccountDetailView.swift */; };
+		A10010 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20010 /* TransactionsView.swift */; };
+		A10011 /* TransactionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20011 /* TransactionDetailView.swift */; };
+		A10012 /* InvestmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20012 /* InvestmentsView.swift */; };
+		A10013 /* BudgetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20013 /* BudgetsView.swift */; };
+		A10014 /* ReportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20014 /* ReportsView.swift */; };
+		A10015 /* OFXExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20015 /* OFXExportService.swift */; };
+		A10016 /* codekind_export.json in Resources */ = {isa = PBXBuildFile; fileRef = A20016 /* codekind_export.json */; };
+		A10017 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20017 /* DashboardViewModel.swift */; };
+		A10018 /* AccountsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20018 /* AccountsViewModel.swift */; };
+		A10019 /* TransactionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20019 /* TransactionsViewModel.swift */; };
+		A10020 /* InvestmentsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20020 /* InvestmentsViewModel.swift */; };
+		A10021 /* BudgetsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20021 /* BudgetsViewModel.swift */; };
+		A10022 /* ReportsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20022 /* ReportsViewModel.swift */; };
+		A10023 /* CurrencyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20023 /* CurrencyFormatter.swift */; };
+		A10024 /* DateExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20024 /* DateExtensions.swift */; };
+		A10025 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20025 /* SettingsView.swift */; };
+		A10026 /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20026 /* ExportView.swift */; };
+		A10027 /* CategoryPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20027 /* CategoryPickerView.swift */; };
+		A10028 /* InvestmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20028 /* InvestmentDetailView.swift */; };
+		A10029 /* PayeesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20029 /* PayeesView.swift */; };
+		A10030 /* SpendingChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20030 /* SpendingChartView.swift */; };
+		A10031 /* QuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20031 /* QuoteProvider.swift */; };
+		A10032 /* FinnhubQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20032 /* FinnhubQuoteProvider.swift */; };
+		A10033 /* QuoteConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20033 /* QuoteConfiguration.swift */; };
+		A10034 /* YahooQuoteProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20034 /* YahooQuoteProvider.swift */; };
+		A10035 /* yahoo_quote_transform.js in Resources */ = {isa = PBXBuildFile; fileRef = A20035 /* yahoo_quote_transform.js */; };
+		A10036 /* TransactionEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20036 /* TransactionEditorView.swift */; };
+		A10037 /* OFXTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20037 /* OFXTypes.swift */; };
+		A10038 /* OFXParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20038 /* OFXParser.swift */; };
+		A10039 /* OFXImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20039 /* OFXImportService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		A30001 /* YMoney.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YMoney.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20001 /* YMoneyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YMoneyApp.swift; sourceTree = "<group>"; };
 		A20002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A20003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		A20004 /* YMoney.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodeld; path = YMoney.xcdatamodeld; sourceTree = "<group>"; };
 		A20005 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		A20006 /* MoneyImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyImportService.swift; sourceTree = "<group>"; };
 		A20007 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
@@ -81,6 +83,12 @@
 		A20033 /* QuoteConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteConfiguration.swift; sourceTree = "<group>"; };
 		A20034 /* YahooQuoteProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YahooQuoteProvider.swift; sourceTree = "<group>"; };
 		A20035 /* yahoo_quote_transform.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = yahoo_quote_transform.js; sourceTree = "<group>"; };
+		A20036 /* TransactionEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionEditorView.swift; sourceTree = "<group>"; };
+		A20037 /* OFXTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OFXTypes.swift; sourceTree = "<group>"; };
+		A20038 /* OFXParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OFXParser.swift; sourceTree = "<group>"; };
+		A20039 /* OFXImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OFXImportService.swift; sourceTree = "<group>"; };
+		A30001 /* YMoney.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YMoney.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC0001 /* YMoney.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = YMoney.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,28 +110,20 @@
 			);
 			sourceTree = "<group>";
 		};
-		A50099 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				A30001 /* YMoney.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		A50002 /* YMoney */ = {
 			isa = PBXGroup;
 			children = (
-				A50003 /* App */,
-				A50004 /* Core */,
-				A50010 /* Services */,
-				A50011 /* Features */,
+				A50003 /* Sources/App */,
+				A50004 /* Sources/Core */,
+				A50010 /* Sources/Services */,
+				A50011 /* Sources/Features */,
 				A50020 /* Resources */,
 				A20003 /* Assets.xcassets */,
 			);
 			path = YMoney;
 			sourceTree = "<group>";
 		};
-		A50003 /* App */ = {
+		A50003 /* Sources/App */ = {
 			isa = PBXGroup;
 			children = (
 				A20001 /* YMoneyApp.swift */,
@@ -132,7 +132,7 @@
 			path = Sources/App;
 			sourceTree = "<group>";
 		};
-		A50004 /* Core */ = {
+		A50004 /* Sources/Core */ = {
 			isa = PBXGroup;
 			children = (
 				A50005 /* Models */,
@@ -146,6 +146,7 @@
 			isa = PBXGroup;
 			children = (
 				A20004 /* YMoney.xcdatamodeld */,
+				A20037 /* OFXTypes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -167,28 +168,19 @@
 			path = Extensions;
 			sourceTree = "<group>";
 		};
-		A50010 /* Services */ = {
+		A50010 /* Sources/Services */ = {
 			isa = PBXGroup;
 			children = (
 				A20006 /* MoneyImportService.swift */,
 				A20015 /* OFXExportService.swift */,
+				A20038 /* OFXParser.swift */,
+				A20039 /* OFXImportService.swift */,
 				A50021 /* Quotes */,
 			);
 			path = Sources/Services;
 			sourceTree = "<group>";
 		};
-		A50021 /* Quotes */ = {
-			isa = PBXGroup;
-			children = (
-				A20031 /* QuoteProvider.swift */,
-				A20032 /* FinnhubQuoteProvider.swift */,
-				A20034 /* YahooQuoteProvider.swift */,
-				A20033 /* QuoteConfiguration.swift */,
-			);
-			path = Quotes;
-			sourceTree = "<group>";
-		};
-		A50011 /* Features */ = {
+		A50011 /* Sources/Features */ = {
 			isa = PBXGroup;
 			children = (
 				A50012 /* Dashboard */,
@@ -230,6 +222,7 @@
 				A20019 /* TransactionsViewModel.swift */,
 				A20027 /* CategoryPickerView.swift */,
 				A20029 /* PayeesView.swift */,
+				A20036 /* TransactionEditorView.swift */,
 			);
 			path = Transactions;
 			sourceTree = "<group>";
@@ -286,6 +279,25 @@
 				A20035 /* yahoo_quote_transform.js */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		A50021 /* Quotes */ = {
+			isa = PBXGroup;
+			children = (
+				A20031 /* QuoteProvider.swift */,
+				A20032 /* FinnhubQuoteProvider.swift */,
+				A20034 /* YahooQuoteProvider.swift */,
+				A20033 /* QuoteConfiguration.swift */,
+			);
+			path = Quotes;
+			sourceTree = "<group>";
+		};
+		A50099 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A30001 /* YMoney.app */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -391,6 +403,10 @@
 				A10032 /* FinnhubQuoteProvider.swift in Sources */,
 				A10033 /* QuoteConfiguration.swift in Sources */,
 				A10034 /* YahooQuoteProvider.swift in Sources */,
+				A10036 /* TransactionEditorView.swift in Sources */,
+				A10037 /* OFXTypes.swift in Sources */,
+				A10038 /* OFXParser.swift in Sources */,
+				A10039 /* OFXImportService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -524,8 +540,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 8GH9H6DFKZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = YMoney;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -538,7 +554,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ymoney.app;
+				PRODUCT_BUNDLE_IDENTIFIER = net.codekind.ymoney;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -552,9 +568,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				DEVELOPMENT_TEAM = 8GH9H6DFKZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = YMoney;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -567,7 +584,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ymoney.app;
+				PRODUCT_BUNDLE_IDENTIFIER = net.codekind.ymoney;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -610,14 +627,7 @@
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
 		};
-		AC0001 /* YMoney.xcdatamodel */ = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.xcdatamodel;
-			path = YMoney.xcdatamodel;
-			sourceTree = "<group>";
-		};
 /* End XCVersionGroup section */
-
 	};
 	rootObject = A90001 /* Project object */;
 }

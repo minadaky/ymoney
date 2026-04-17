@@ -19,7 +19,7 @@ final class OFXExportService {
         ofx += "<OFX>\n"
         ofx += signOnResponse()
 
-        if account.accountType == 5 {
+        if account.ofxAccountType == .investment {
             ofx += investmentStatementResponse(account: account, transactions: transactions)
         } else {
             ofx += bankStatementResponse(account: account, transactions: transactions)
@@ -44,8 +44,7 @@ final class OFXExportService {
                 ($0.date ?? .distantPast) < ($1.date ?? .distantPast)
             } ?? []
 
-            // Skip investment accounts (use INVSTMTTRNRS for those)
-            if account.accountType == 5 {
+            if account.ofxAccountType == .investment {
                 ofx += investmentStatementResponse(account: account, transactions: transactions)
             } else {
                 ofx += bankStatementResponse(account: account, transactions: transactions)
@@ -81,7 +80,7 @@ final class OFXExportService {
     }
 
     private func bankStatementResponse(account: Account, transactions: [Transaction]) -> String {
-        let acctType = ofxAccountType(account.accountType)
+        let acctType = account.ofxAccountType.ofxBankType
         let acctID = account.name ?? "UNKNOWN"
 
         var xml = """
@@ -164,12 +163,12 @@ final class OFXExportService {
             let symbol = trn.security?.symbol ?? "UNKNOWN"
             let date = ofxDate(trn.date ?? Date())
 
-            switch trn.actionType {
-            case 1: // Buy
+            switch trn.transactionType {
+            case "buy":
                 xml += """
                 <BUYSTOCK>
                 <INVBUY>
-                <INVTRAN><FITID>\(trn.moneyID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
                 <UNITS>\(detail.quantity)</UNITS>
                 <UNITPRICE>\(detail.price)</UNITPRICE>
@@ -182,11 +181,11 @@ final class OFXExportService {
 
                 """
 
-            case 2: // Sell
+            case "sell":
                 xml += """
                 <SELLSTOCK>
                 <INVSELL>
-                <INVTRAN><FITID>\(trn.moneyID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
                 <UNITS>\(detail.quantity)</UNITS>
                 <UNITPRICE>\(detail.price)</UNITPRICE>
@@ -199,16 +198,33 @@ final class OFXExportService {
 
                 """
 
-            case 3: // Dividend
+            case "income":
+                let incomeType = (trn.incomeType ?? "div").uppercased()
                 xml += """
                 <INCOME>
-                <INVTRAN><FITID>\(trn.moneyID)</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
                 <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
-                <INCOMETYPE>DIV</INCOMETYPE>
+                <INCOMETYPE>\(incomeType)</INCOMETYPE>
                 <TOTAL>\(trn.amount?.stringValue ?? "0")</TOTAL>
                 <SUBACCTSEC>OTHER</SUBACCTSEC>
                 <SUBACCTFUND>OTHER</SUBACCTFUND>
                 </INCOME>
+
+                """
+
+            case "reinvest":
+                let incomeType = (trn.incomeType ?? "div").uppercased()
+                xml += """
+                <REINVEST>
+                <INVTRAN><FITID>\(trn.fitID ?? String(trn.sourceID))</FITID><DTTRADE>\(date)</DTTRADE></INVTRAN>
+                <SECID><UNIQUEID>\(escapeXML(symbol))</UNIQUEID><UNIQUEIDTYPE>TICKER</UNIQUEIDTYPE></SECID>
+                <INCOMETYPE>\(incomeType)</INCOMETYPE>
+                <UNITS>\(detail.quantity)</UNITS>
+                <UNITPRICE>\(detail.price)</UNITPRICE>
+                <TOTAL>\(trn.amount?.stringValue ?? "0")</TOTAL>
+                <SUBACCTSEC>OTHER</SUBACCTSEC>
+                <SUBACCTFUND>OTHER</SUBACCTFUND>
+                </REINVEST>
 
                 """
 
@@ -239,7 +255,7 @@ final class OFXExportService {
         <TRNTYPE>\(trnType)</TRNTYPE>
         <DTPOSTED>\(date)</DTPOSTED>
         <TRNAMT>\(amount.stringValue)</TRNAMT>
-        <FITID>\(trn.moneyID)</FITID>
+        <FITID>\(trn.fitID ?? String(trn.sourceID))</FITID>
         <NAME>\(escapeXML(name))</NAME>
         \(trn.memo != nil ? "<MEMO>\(escapeXML(trn.memo!))</MEMO>" : "")
         \(trn.checkNumber != nil ? "<CHECKNUM>\(escapeXML(trn.checkNumber!))</CHECKNUM>" : "")
@@ -255,19 +271,6 @@ final class OFXExportService {
         f.dateFormat = "yyyyMMddHHmmss"
         f.locale = Locale(identifier: "en_US_POSIX")
         return f.string(from: date)
-    }
-
-    private func ofxAccountType(_ type: Int32) -> String {
-        switch type {
-        case 0: return "CHECKING"
-        case 1: return "CREDITLINE"
-        case 2: return "SAVINGS"
-        case 3: return "CHECKING"     // Cash → Checking
-        case 4: return "MONEYMRKT"
-        case 8: return "CD"
-        case 9: return "CREDITLINE"   // Loan
-        default: return "CHECKING"
-        }
     }
 
     private func escapeXML(_ text: String) -> String {

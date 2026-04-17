@@ -19,8 +19,31 @@ final class PersistenceController: @unchecked Sendable {
             description.setOption(true as NSNumber, forKey: NSInferMappingModelAutomaticallyOption)
         }
 
-        container.loadPersistentStores { _, error in
+        container.loadPersistentStores { description, error in
             if let error = error as NSError? {
+                // If migration fails (incompatible schema), delete the store and retry
+                let migrationCodes: Set<Int> = [
+                    NSPersistentStoreIncompatibleVersionHashError, // 134100
+                    134110, // NSMigrationError
+                    134140, // NSMigrationMissingSourceModelError
+                    134190, // NSInferredMappingModelError
+                ]
+                if migrationCodes.contains(error.code) {
+                    if let url = description.url {
+                        try? FileManager.default.removeItem(at: url)
+                        // Also remove journal files
+                        try? FileManager.default.removeItem(at: url.appendingPathExtension("wal"))
+                        try? FileManager.default.removeItem(at: url.appendingPathExtension("shm"))
+                    }
+                    // Retry loading
+                    self.container.loadPersistentStores { _, retryError in
+                        if let retryError {
+                            fatalError("Core Data failed to load after store reset: \(retryError)")
+                        }
+                    }
+                    UserDefaults.standard.set(false, forKey: "hasImportedData")
+                    return
+                }
                 fatalError("Core Data failed to load: \(error), \(error.userInfo)")
             }
         }
@@ -34,5 +57,25 @@ final class PersistenceController: @unchecked Sendable {
         let context = container.newBackgroundContext()
         context.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
         return context
+    }
+
+    /// Delete all data from every entity in the store
+    func deleteAllData() throws {
+        let context = container.viewContext
+        let entityNames = container.managedObjectModel.entities.compactMap(\.name)
+
+        for entityName in entityNames {
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+            deleteRequest.resultType = .resultTypeObjectIDs
+
+            let result = try context.execute(deleteRequest) as? NSBatchDeleteResult
+            if let objectIDs = result?.result as? [NSManagedObjectID] {
+                let changes = [NSDeletedObjectsKey: objectIDs]
+                NSManagedObjectContext.mergeChanges(fromRemoteContextSave: changes, into: [context])
+            }
+        }
+
+        UserDefaults.standard.set(false, forKey: "hasImportedData")
     }
 }

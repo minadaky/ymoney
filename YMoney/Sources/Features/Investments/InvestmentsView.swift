@@ -154,7 +154,7 @@ struct InvestmentsView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    actionBadge(trn.actionType)
+                    actionBadge(trn.transactionType)
                     Text(trn.security?.name ?? "Unknown")
                         .font(.subheadline)
                         .lineLimit(1)
@@ -180,13 +180,13 @@ struct InvestmentsView: View {
         .padding(.vertical, 2)
     }
 
-    private func actionBadge(_ type: Int32) -> some View {
+    private func actionBadge(_ type: String?) -> some View {
         let (text, color): (String, Color) = {
             switch type {
-            case 1: return ("BUY", .green)
-            case 2: return ("SELL", .red)
-            case 3: return ("DIV", .blue)
-            case 4: return ("INT", .orange)
+            case "buy": return ("BUY", .green)
+            case "sell": return ("SELL", .red)
+            case "income": return ("DIV", .blue)
+            case "reinvest": return ("REINV", .purple)
             default: return ("TXN", .gray)
             }
         }()
